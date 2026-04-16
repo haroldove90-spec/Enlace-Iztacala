@@ -26,6 +26,8 @@ import Auth from './components/Auth';
 import type { User } from '@supabase/supabase-js';
 import { useCommunityData } from './lib/supabase-hooks';
 import NewPostModal from './components/NewPostModal';
+import ProfileView from './components/ProfileView';
+import SettingsView from './components/SettingsView';
 
 // Mock Data
 const MOCK_POSTS: Post[] = [
@@ -285,50 +287,21 @@ export default function App() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="max-w-2xl"
             >
-              <header className="mb-6 md:mb-10 pb-5 border-b border-slate-100">
-                <h2 className="text-xl md:text-3xl tracking-tight leading-none">Mi Perfil</h2>
-              </header>
-
-              <div className="editorial-card space-y-8">
-                <div className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
-                   <div className="w-24 h-24 bg-slate-100 rounded-full overflow-hidden border-4 border-white shadow-sm shrink-0">
-                    <img 
-                      src={profile?.avatar_url || `https://picsum.photos/seed/${user.id}/200/200`} 
-                      alt="Avatar" 
-                      className="w-full h-full object-cover"
-                      referrerPolicy="no-referrer"
-                    />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl">{profile?.full_name || 'Nuevo Vecino'}</h3>
-                    <p className="text-brand-muted truncate max-w-[200px] sm:max-w-none">{user.email}</p>
-                    <div className={`mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                      profile?.address_verified ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'
-                    }`}>
-                      {profile?.address_verified ? (
-                        <><CheckCircle2 size={12} /> Domicilio Verificado</>
-                      ) : (
-                        <><XCircle size={12} /> Pendiente de Verificación</>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t border-slate-50">
-                  <div className="space-y-1">
-                    <span className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Miembro desde</span>
-                    <p className="text-sm font-medium">
-                      {profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : 'Hoy'}
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Ubicación</span>
-                    <p className="text-sm font-medium">Los Reyes Iztacala</p>
-                  </div>
-                </div>
-              </div>
+              <ProfileView 
+                profile={profile} 
+                userEmail={user.email} 
+                onUpdate={() => fetchProfile(user.id)} 
+              />
+            </motion.div>
+          ) : activeTab === 'Configuración' ? (
+            <motion.div 
+              key="config"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+            >
+              <SettingsView />
             </motion.div>
           ) : (
             <motion.div 
