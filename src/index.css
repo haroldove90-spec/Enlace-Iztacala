@@ -13,24 +13,37 @@
   --color-brand-muted: #64748b;
   --color-brand-commerce: #9d174d;
   --color-brand-commerce-bg: #fdf2f8;
+
+  /* Escala fluida responsiva */
+  --text-base: clamp(0.875rem, 0.9vw + 0.6rem, 1rem);
+  --text-lg: clamp(1rem, 1.2vw + 0.7rem, 1.25rem);
+  --text-xl: clamp(1.25rem, 1.5vw + 0.9rem, 1.5rem);
+  --text-2xl: clamp(1.5rem, 2vw + 1rem, 2rem);
+  --text-3xl: clamp(1.875rem, 3vw + 1.2rem, 2.5rem);
+  --text-4xl: clamp(2.25rem, 4vw + 1.5rem, 3.5rem);
+  --text-5xl: clamp(3rem, 6vw + 2rem, 5rem);
 }
 
 @layer base {
+  html {
+    font-size: 16px;
+  }
+  
   body {
-    @apply bg-brand-bg text-brand-ink font-sans antialiased;
+    @apply bg-brand-bg text-brand-ink font-sans antialiased text-base;
   }
   
   h1, h2, h3, h4, .serif {
-    @apply font-serif font-bold;
+    @apply font-serif font-bold tracking-tight;
   }
 }
 
 .glass-morphism {
-  @apply bg-white/70 backdrop-blur-md border border-white/20;
+  @apply bg-white/70 backdrop-blur-lg border border-white/20;
 }
 
 .editorial-card {
-  @apply bg-white border border-slate-200 p-6 transition-all hover:shadow-sm;
+  @apply bg-white border border-slate-100 p-6 md:p-10 transition-all duration-500 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] rounded-[2rem];
 }
 
 .category-pill {

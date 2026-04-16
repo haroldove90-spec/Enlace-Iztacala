@@ -15,7 +15,9 @@ import {
   LogOut,
   User as UserIcon,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Menu,
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import type { Post, Incident, Category, Profile } from './types';
@@ -86,6 +88,8 @@ export default function App() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   useEffect(() => {
     // Check active sessions
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -131,97 +135,143 @@ export default function App() {
   }
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-brand-bg text-brand-ink selection:bg-brand-primary/20">
-      {/* Sidebar */}
-      <aside className="w-[300px] border-r border-slate-200 bg-white p-10 flex flex-col justify-between shrink-0">
-        <div>
-          <header className="mb-12">
-            <img 
-              src="https://appdesignproyectos.com/enlaceiztacala.png" 
-              alt="Logo" 
-              className="w-20 mb-4"
-              referrerPolicy="no-referrer"
-            />
-            <h1 className="brand-title">Enlace<br />Iztacala</h1>
-            <p className="brand-subtitle">Red Comunitaria Boutique</p>
-          </header>
-
-          <nav className="space-y-6">
-            <SidebarItem 
-              icon={<Users size={18} />} 
-              label="Comunidad" 
-              active={activeTab === 'Comunidad'} 
-              onClick={() => setActiveTab('Comunidad')} 
-            />
-            <SidebarItem 
-              icon={<Shield size={18} />} 
-              label="Seguridad" 
-              active={activeTab === 'Seguridad'} 
-              onClick={() => setActiveTab('Seguridad')} 
-            />
-            <SidebarItem 
-              icon={<Store size={18} />} 
-              label="Comercio Local" 
-              active={activeTab === 'Comercio Local'} 
-              onClick={() => setActiveTab('Comercio Local')} 
-            />
-            <SidebarItem 
-              icon={<Megaphone size={18} />} 
-              label="Servicios Públicos" 
-              active={activeTab === 'Servicios Públicos'} 
-              onClick={() => setActiveTab('Servicios Públicos')} 
-            />
-            <SidebarItem 
-              icon={<UserIcon size={18} />} 
-              label="Mi Perfil" 
-              active={activeTab === 'Mi Perfil'} 
-              onClick={() => setActiveTab('Mi Perfil')} 
-            />
-            <SidebarItem 
-              icon={<Settings size={18} />} 
-              label="Configuración" 
-              active={activeTab === 'Configuración'} 
-              onClick={() => setActiveTab('Configuración')} 
-            />
-          </nav>
+    <div className="flex flex-col md:flex-row h-screen w-full overflow-hidden bg-brand-bg text-brand-ink selection:bg-brand-primary/20">
+      {/* Mobile Header */}
+      <header className="md:hidden flex items-center justify-between px-6 py-4 bg-white border-b border-slate-200 z-50">
+        <div className="flex items-center gap-3">
+          <img 
+            src="https://appdesignproyectos.com/enlaceiztacala.png" 
+            alt="Logo" 
+            className="w-10"
+            referrerPolicy="no-referrer"
+          />
+          <span className="font-serif font-bold text-lg leading-none">Iztacala</span>
         </div>
+        <button 
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className="p-2 text-brand-muted hover:text-brand-primary transition-colors"
+        >
+          {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </header>
 
-        <div className="pt-10 border-t border-slate-100 flex flex-col gap-6">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-slate-200 rounded-full overflow-hidden shrink-0">
-              <img 
-                src={profile?.avatar_url || `https://picsum.photos/seed/${user.id}/100/100`} 
-                alt="Profile" 
-                className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
-              />
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold truncate">{profile?.full_name || user.email}</p>
-              <div className="flex items-center gap-1">
-                {profile?.address_verified ? (
-                  <CheckCircle2 size={10} className="text-emerald-500" />
-                ) : (
-                  <XCircle size={10} className="text-brand-muted" />
-                )}
-                <p className="text-[11px] text-brand-muted truncate">
-                  {profile?.address_verified ? 'Verificado' : 'No verificado'}
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          <button 
-            onClick={handleSignOut}
-            className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-red-500 transition-colors w-full"
+      {/* Sidebar / Overlay Navigation */}
+      <AnimatePresence>
+        {(isSidebarOpen || window.innerWidth >= 768) && (
+          <motion.aside 
+            initial={window.innerWidth < 768 ? { x: -300 } : false}
+            animate={{ x: 0 }}
+            exit={{ x: -300 }}
+            className={`
+              fixed md:relative inset-y-0 left-0 w-[280px] md:w-[300px] lg:w-[320px] 
+              border-r border-slate-200 bg-white p-8 md:p-10 flex flex-col justify-between 
+              shrink-0 z-[60] md:z-10 transition-transform duration-300 ease-in-out
+              ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+            `}
           >
-            <LogOut size={14} /> Cerrar Sesión
-          </button>
-        </div>
-      </aside>
+            <div>
+              <header className="hidden md:block mb-12">
+                <img 
+                  src="https://appdesignproyectos.com/enlaceiztacala.png" 
+                  alt="Logo" 
+                  className="w-20 mb-4"
+                  referrerPolicy="no-referrer"
+                />
+                <h1 className="brand-title">Enlace<br />Iztacala</h1>
+                <p className="brand-subtitle">Red Comunitaria Boutique</p>
+              </header>
+
+              <nav className="space-y-4 md:space-y-6">
+                <SidebarItem 
+                  icon={<Users size={18} />} 
+                  label="Comunidad" 
+                  active={activeTab === 'Comunidad'} 
+                  onClick={() => { setActiveTab('Comunidad'); setIsSidebarOpen(false); }} 
+                />
+                <SidebarItem 
+                  icon={<Shield size={18} />} 
+                  label="Seguridad" 
+                  active={activeTab === 'Seguridad'} 
+                  onClick={() => { setActiveTab('Seguridad'); setIsSidebarOpen(false); }} 
+                />
+                <SidebarItem 
+                  icon={<Store size={18} />} 
+                  label="Comercio Local" 
+                  active={activeTab === 'Comercio Local'} 
+                  onClick={() => { setActiveTab('Comercio Local'); setIsSidebarOpen(false); }} 
+                />
+                <SidebarItem 
+                  icon={<Megaphone size={18} />} 
+                  label="Servicios Públicos" 
+                  active={activeTab === 'Servicios Públicos'} 
+                  onClick={() => { setActiveTab('Servicios Públicos'); setIsSidebarOpen(false); }} 
+                />
+                <SidebarItem 
+                  icon={<UserIcon size={18} />} 
+                  label="Mi Perfil" 
+                  active={activeTab === 'Mi Perfil'} 
+                  onClick={() => { setActiveTab('Mi Perfil'); setIsSidebarOpen(false); }} 
+                />
+                <SidebarItem 
+                  icon={<Settings size={18} />} 
+                  label="Configuración" 
+                  active={activeTab === 'Configuración'} 
+                  onClick={() => { setActiveTab('Configuración'); setIsSidebarOpen(false); }} 
+                />
+              </nav>
+            </div>
+
+            <div className="pt-8 border-t border-slate-100 flex flex-col gap-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-slate-200 rounded-full overflow-hidden shrink-0">
+                  <img 
+                    src={profile?.avatar_url || `https://picsum.photos/seed/${user.id}/100/100`} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold truncate">{profile?.full_name || user.email}</p>
+                  <div className="flex items-center gap-1">
+                    {profile?.address_verified ? (
+                      <CheckCircle2 size={10} className="text-emerald-500" />
+                    ) : (
+                      <XCircle size={10} className="text-brand-muted" />
+                    )}
+                    <p className="text-[11px] text-brand-muted truncate">
+                      {profile?.address_verified ? 'Verificado' : 'No verificado'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <button 
+                onClick={handleSignOut}
+                className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-red-500 transition-colors w-full"
+              >
+                <LogOut size={14} /> Cerrar Sesión
+              </button>
+            </div>
+          </motion.aside>
+        )}
+      </AnimatePresence>
+
+      {/* Mobile Overlay */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsSidebarOpen(false)}
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 md:hidden"
+          />
+        )}
+      </AnimatePresence>
 
       {/* Main Content */}
-      <main className="flex-1 p-10 overflow-y-auto">
+      <main className="flex-1 p-6 md:p-10 lg:p-16 overflow-y-auto w-full max-w-[1400px] mx-auto">
         <AnimatePresence mode="wait">
           {activeTab === 'Mi Perfil' ? (
             <motion.div 
@@ -231,12 +281,12 @@ export default function App() {
               exit={{ opacity: 0, x: -20 }}
               className="max-w-2xl"
             >
-              <header className="mb-10 pb-5 border-b border-slate-100">
-                <h2 className="text-4xl leading-none">Mi Perfil</h2>
+              <header className="mb-8 md:mb-12 pb-5 border-b border-slate-100">
+                <h2 className="text-3xl md:text-5xl tracking-tight leading-none">Mi Perfil</h2>
               </header>
 
               <div className="editorial-card space-y-8">
-                <div className="flex items-center gap-6">
+                <div className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
                    <div className="w-24 h-24 bg-slate-100 rounded-full overflow-hidden border-4 border-white shadow-sm shrink-0">
                     <img 
                       src={profile?.avatar_url || `https://picsum.photos/seed/${user.id}/200/200`} 
@@ -247,7 +297,7 @@ export default function App() {
                   </div>
                   <div>
                     <h3 className="text-2xl">{profile?.full_name || 'Nuevo Vecino'}</h3>
-                    <p className="text-brand-muted">{user.email}</p>
+                    <p className="text-brand-muted truncate max-w-[200px] sm:max-w-none">{user.email}</p>
                     <div className={`mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                       profile?.address_verified ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'
                     }`}>
@@ -260,7 +310,7 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-6 pt-6 border-t border-slate-50">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t border-slate-50">
                   <div className="space-y-1">
                     <span className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Miembro desde</span>
                     <p className="text-sm font-medium">
@@ -272,18 +322,6 @@ export default function App() {
                     <p className="text-sm font-medium">Los Reyes Iztacala</p>
                   </div>
                 </div>
-
-                <div className="pt-6 border-t border-slate-50">
-                  <span className="text-[10px] uppercase tracking-widest font-bold text-slate-400 block mb-4">Configuración de la Cuenta</span>
-                  <div className="space-y-3">
-                    <button className="w-full text-left p-4 bg-slate-50 hover:bg-slate-100 transition-colors text-sm font-medium flex items-center justify-between">
-                      Notificaciones de Seguridad <ChevronRight size={16} className="text-slate-300" />
-                    </button>
-                    <button className="w-full text-left p-4 bg-slate-50 hover:bg-slate-100 transition-colors text-sm font-medium flex items-center justify-between">
-                      Verificar Domicilio <ChevronRight size={16} className="text-slate-300" />
-                    </button>
-                  </div>
-                </div>
               </div>
             </motion.div>
           ) : (
@@ -293,55 +331,55 @@ export default function App() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
             >
-              <header className="flex justify-between items-end mb-10 pb-5 border-b border-slate-100">
-                <h2 className="text-4xl leading-none">Novedades del Vecindario</h2>
-                <button className="text-sm font-medium text-brand-primary flex items-center gap-1 hover:gap-2 transition-all">
+              <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 md:mb-12 pb-5 border-b border-slate-100">
+                <h2 className="text-3xl md:text-5xl tracking-tight leading-none">Novedades</h2>
+                <button className="text-sm font-medium text-brand-primary flex items-center gap-1 hover:gap-2 transition-all self-start sm:self-auto">
                   Ver todo <ChevronRight size={16} />
                 </button>
               </header>
 
-              <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-8 xl:gap-12">
                 {/* Main Feed Section */}
-                <section className="space-y-8">
+                <section className="space-y-6 md:space-y-10">
                   {MOCK_POSTS.map((post) => (
-                    <article key={post.id} className="editorial-card flex flex-col justify-between">
+                    <article key={post.id} className="editorial-card flex flex-col justify-between group">
                       <div>
-                        <span className={`category-pill ${post.category === 'Comercio' ? 'bg-pink-100 text-pink-700' : ''}`}>
+                        <span className={`category-pill ${post.category === 'Comercio' ? 'bg-brand-commerce-bg text-brand-commerce' : 'bg-sky-50 text-sky-700'}`}>
                           {post.category}
                         </span>
-                        <h3 className="text-2xl mb-3 leading-snug">{post.content.slice(0, 50)}...</h3>
-                        <p className="text-base leading-relaxed text-slate-600 mb-6">{post.content}</p>
+                        <h3 className="text-xl md:text-3xl mb-4 leading-tight group-hover:text-brand-primary transition-colors">{post.content.slice(0, 60)}...</h3>
+                        <p className="text-sm md:text-lg leading-relaxed text-slate-600 mb-8">{post.content}</p>
                       </div>
-                      <footer className="flex items-center justify-between pt-6 border-t border-slate-50">
+                      <footer className="flex items-center justify-between pt-6 border-t border-slate-100">
                         <div className="flex items-center gap-4 text-xs text-brand-muted font-medium">
                           <span className="flex items-center gap-1"><MessageSquare size={14} /> {post.comment_count}</span>
-                          <span className="flex items-center gap-1"><Heart size={14} /> {post.reaction_count}</span>
+                          <span className="flex items-center gap-1"><Heart size={14} className="group-hover:text-red-500 transition-colors" /> {post.reaction_count}</span>
                         </div>
-                        <span className="text-[11px] font-bold text-slate-400 capitalize">{post.author?.full_name}</span>
+                        <span className="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-wider">{post.author?.full_name}</span>
                       </footer>
                     </article>
                   ))}
                 </section>
 
                 <aside className="space-y-8">
-                  <section className="bg-brand-ink text-brand-bg p-8 flex flex-col min-h-[400px]">
-                    <div className="border-b border-white/10 pb-4 mb-6 flex justify-between items-center">
-                      <h3 className="serif text-xl">Reportes Activos</h3>
+                  <section className="bg-brand-ink text-brand-bg rounded-[2rem] p-8 flex flex-col min-h-[400px] shadow-xl">
+                    <div className="border-b border-white/10 pb-4 mb-8 flex justify-between items-center">
+                      <h3 className="serif text-xl md:text-2xl">Reportes Activos</h3>
                       <span className="text-[10px] tracking-widest font-bold opacity-40">HOY</span>
                     </div>
                     <div className="space-y-6 flex-1">
                       {MOCK_INCIDENTS.map((incident) => (
-                        <div key={incident.id} className="pb-4 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors cursor-pointer">
-                          <div className="flex justify-between items-start mb-1">
-                            <h4 className="text-sm font-semibold">{incident.title}</h4>
-                            <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase bg-brand-primary text-white">{incident.status}</span>
+                        <div key={incident.id} className="pb-4 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors cursor-pointer rounded-lg p-2 -mx-2">
+                          <div className="flex justify-between items-start gap-2 mb-1">
+                            <h4 className="text-sm font-semibold leading-tight">{incident.title}</h4>
+                            <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase bg-brand-primary text-white whitespace-nowrap">{incident.status}</span>
                           </div>
-                          <p className="text-xs text-white/50 flex items-center gap-1"><MapPin size={10} /> {incident.location}</p>
+                          <p className="text-xs text-white/50 flex items-center gap-1 mb-2"><MapPin size={10} /> {incident.location}</p>
                         </div>
                       ))}
                     </div>
-                    <button className="mt-8 w-full py-4 bg-brand-primary hover:bg-brand-accent transition-colors text-white font-bold text-sm tracking-wide flex items-center justify-center gap-2">
-                      <Plus size={18} /> Crear Nuevo Reporte
+                    <button className="mt-8 w-full py-5 bg-brand-primary hover:bg-brand-accent transition-all text-white font-bold text-[10px] uppercase tracking-[0.2em] rounded-full flex items-center justify-center gap-3">
+                      <Plus size={18} /> Nuevo Reporte
                     </button>
                   </section>
                 </aside>
@@ -351,8 +389,8 @@ export default function App() {
         </AnimatePresence>
       </main>
 
-      <footer className="fixed bottom-5 right-10 text-[10px] text-brand-muted italic pointer-events-none">
-        Enlace Iztacala • Conectando Los Reyes Iztacala de forma segura y elegante.
+      <footer className="hidden lg:block fixed bottom-5 right-10 text-[9px] text-brand-muted uppercase tracking-widest font-semibold pointer-events-none">
+        Enlace Iztacala • Conectando Los Reyes de forma segura
       </footer>
     </div>
   );

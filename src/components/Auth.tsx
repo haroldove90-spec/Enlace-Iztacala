@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Mail, Loader2, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -34,7 +34,7 @@ export default function Auth() {
       <motion.div 
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-md w-full bg-white border border-slate-100 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.06)] rounded-[2.5rem] p-8 md:p-16 text-center"
+        className="max-w-md w-full bg-white border border-slate-100 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.06)] rounded-[2.5rem] px-6 py-12 md:p-16 text-center"
       >
         <div className="mb-12">
           <img 
