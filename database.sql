@@ -49,6 +49,26 @@ CREATE TABLE incidents (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 5. Función de Automatización de Perfiles
+-- Se ejecuta cuando se crea un usuario en auth.users
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.profiles (id, username, full_name)
+  VALUES (
+    new.id, 
+    split_part(new.email, '@', 1), -- Toma lo que está antes del @ como username inicial
+    COALESCE(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1))
+  );
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger para automatizar la inserción
+CREATE OR REPLACE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
 -- Políticas de Seguridad (RLS)
 
 -- Habilitar RLS en todas las tablas
