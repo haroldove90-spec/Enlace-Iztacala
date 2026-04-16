@@ -1,6 +1,18 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <script>
+      // Early error catcher
+      window.onerror = function(msg, url, line, col, error) {
+        var div = document.createElement('div');
+        div.style.cssText = 'color:white;position:fixed;top:0;left:0;background:red;padding:20px;z-index:99999;width:100%;font-family:sans-serif;font-weight:bold;';
+        div.innerHTML = '🚨 ERROR CRÍTICO DETECTADO: <br>' + msg + '<br><small>' + url + ':' + line + '</small>';
+        document.body.appendChild(div);
+      };
+      window.addEventListener('unhandledrejection', function(event) {
+        window.onerror('Promesa rechazada: ' + event.reason);
+      });
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0369a1" />
@@ -13,4 +25,3 @@
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-

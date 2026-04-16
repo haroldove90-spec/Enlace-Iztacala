@@ -3,8 +3,23 @@ import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+console.log('DOM cargado, iniciando React...');
+
+try {
+  const container = document.getElementById('root');
+  if (!container) {
+    throw new Error('No se encontró el elemento root en el DOM');
+  }
+  const root = createRoot(container);
+  root.render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  );
+  console.log('React montado correctamente.');
+} catch (error) {
+  console.error('Error durante el montaje de React:', error);
+  if (typeof window.onerror === 'function') {
+    window.onerror('Falla al montar React: ' + error, '', 0, 0, error as Error);
+  }
+}
