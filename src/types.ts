@@ -11,6 +11,27 @@ export interface Profile {
   created_at: string;
 }
 
+export type FriendshipStatus = 'Pending' | 'Accepted' | 'Blocked';
+
+export interface Friendship {
+  id: string;
+  user_id: string;
+  friend_id: string;
+  status: FriendshipStatus;
+  created_at: string;
+  friend?: Profile; // Para cuando traemos la data del amigo
+}
+
+export interface Message {
+  id: string;
+  sender_id: string;
+  recipient_id: string;
+  content: string;
+  is_read: boolean;
+  created_at: string;
+  sender?: Profile;
+}
+
 export interface Post {
   id: string;
   user_id: string;

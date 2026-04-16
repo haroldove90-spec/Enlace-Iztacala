@@ -28,6 +28,7 @@ import { useCommunityData } from './lib/supabase-hooks';
 import NewPostModal from './components/NewPostModal';
 import ProfileView from './components/ProfileView';
 import SettingsView from './components/SettingsView';
+import ChatView from './components/ChatView';
 import PostInteractions from './components/PostInteractions';
 
 // Mock Data
@@ -225,6 +226,12 @@ export default function App() {
                   onClick={() => { setActiveTab('Servicios Públicos'); setIsSidebarOpen(false); }} 
                 />
                 <SidebarItem 
+                  icon={<MessageSquare size={18} />} 
+                  label="Mensajes" 
+                  active={activeTab === 'Mensajes'} 
+                  onClick={() => { setActiveTab('Mensajes'); setIsSidebarOpen(false); }} 
+                />
+                <SidebarItem 
                   icon={<UserIcon size={18} />} 
                   label="Mi Perfil" 
                   active={activeTab === 'Mi Perfil'} 
@@ -313,6 +320,15 @@ export default function App() {
               exit={{ opacity: 0, x: -20 }}
             >
               <SettingsView />
+            </motion.div>
+          ) : activeTab === 'Mensajes' ? (
+            <motion.div 
+              key="chat"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+            >
+              <ChatView userId={user.id} />
             </motion.div>
           ) : (
             <motion.div 
