@@ -293,6 +293,7 @@ export default function App() {
             >
               <ProfileView 
                 profile={profile} 
+                userId={user.id}
                 userEmail={user.email} 
                 onUpdate={() => fetchProfile(user.id)} 
               />

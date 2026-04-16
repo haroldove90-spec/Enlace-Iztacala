@@ -7,13 +7,22 @@ import type { Profile } from '../types';
 
 interface ProfileViewProps {
   profile: Profile | null;
+  userId: string;
   userEmail: string | undefined;
   onUpdate: () => void;
 }
 
-export default function ProfileView({ profile, userEmail, onUpdate }: ProfileViewProps) {
+export default function ProfileView({ profile, userId, userEmail, onUpdate }: ProfileViewProps) {
   const [fullName, setFullName] = useState(profile?.full_name || '');
   const [bio, setBio] = useState(profile?.bio || '');
+
+  // Actualizar el estado local cuando el perfil cargue
+  React.useEffect(() => {
+    if (profile) {
+      setFullName(profile.full_name || '');
+      setBio(profile.bio || '');
+    }
+  }, [profile]);
   const [loading, setLoading] = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
@@ -22,48 +31,53 @@ export default function ProfileView({ profile, userEmail, onUpdate }: ProfileVie
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!profile) return;
     setLoading(true);
 
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({
+        .upsert({
+          id: userId,
           full_name: fullName,
           bio: bio,
-        })
-        .eq('id', profile.id);
+          username: profile?.username || userEmail?.split('@')[0], // Fallback por si no existe
+          updated_at: new Date().toISOString(),
+        });
 
       if (error) throw error;
       onUpdate();
       alert('Perfil actualizado con éxito');
     } catch (error) {
       console.error('Error al actualizar perfil:', error);
-      alert('Error al actualizar perfil');
+      alert('Error al actualizar perfil. Verifica tu conexión.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0] && profile) {
+    if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setAvatarLoading(true);
 
       try {
-        const publicUrl = await uploadFile('avatars', file, profile.id);
+        const publicUrl = await uploadFile('avatars', file, userId);
         
         const { error } = await supabase
           .from('profiles')
-          .update({ avatar_url: publicUrl })
-          .eq('id', profile.id);
+          .upsert({ 
+            id: userId,
+            avatar_url: publicUrl,
+            username: profile?.username || userEmail?.split('@')[0],
+            updated_at: new Date().toISOString()
+          });
 
         if (error) throw error;
         onUpdate();
         alert('Foto de perfil actualizada');
       } catch (error) {
         console.error('Error al subir avatar:', error);
-        alert('Error al subir la foto. Verifica que el bucket "avatars" exista en Supabase.');
+        alert('Error al subir la foto. Verifica que el bucket "avatars" sea público en Supabase.');
       } finally {
         setAvatarLoading(false);
       }
@@ -111,7 +125,7 @@ export default function ProfileView({ profile, userEmail, onUpdate }: ProfileVie
                   <Loader2 className="animate-spin text-brand-primary" size={24} />
                 ) : (
                   <img 
-                    src={profile?.avatar_url || `https://picsum.photos/seed/${profile?.id}/200/200`} 
+                    src={profile?.avatar_url || `https://picsum.photos/seed/${userId}/200/200`} 
                     alt="Avatar" 
                     className="w-full h-full object-cover"
                   />
