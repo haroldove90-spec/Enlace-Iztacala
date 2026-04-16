@@ -82,6 +82,55 @@ export function useCommunityData(currentUserId?: string) {
 }
 
 /**
+ * Hook para obtener posts de un usuario específico.
+ */
+export function useUserPosts(userId: string, currentUserId?: string) {
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    const fetchUserPosts = async () => {
+      const { data, error } = await supabase
+        .from('posts')
+        .select(`
+          *,
+          author:profiles(id, username, full_name, avatar_url, address_verified),
+          likes(user_id),
+          comments(id)
+        `)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        const formattedPosts = data.map((post: any) => ({
+          ...post,
+          likes_count: post.likes?.length || 0,
+          comments_count: post.comments?.length || 0,
+          has_liked: post.likes?.some((l: any) => l.user_id === currentUserId)
+        }));
+        setPosts(formattedPosts);
+      }
+      setLoading(false);
+    };
+
+    fetchUserPosts();
+
+    const postSubscription = supabase
+      .channel(`public:posts:${userId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'posts', filter: `user_id=eq.${userId}` }, fetchUserPosts)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(postSubscription);
+    };
+  }, [userId, currentUserId]);
+
+  return { posts, loading };
+}
+
+/**
  * Funciones de inserción
  */
 export async function createPost(content: string, category: string, userId: string, imageUrl?: string) {

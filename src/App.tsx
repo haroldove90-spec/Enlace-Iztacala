@@ -31,6 +31,8 @@ import SettingsView from './components/SettingsView';
 import ChatView from './components/ChatView';
 import AdminDashboard from './components/AdminDashboard';
 import BusinessDashboard from './components/BusinessDashboard';
+import CommunityView from './components/CommunityView';
+import PublicProfileView from './components/PublicProfileView';
 import PostInteractions from './components/PostInteractions';
 
 // Mock Data
@@ -108,6 +110,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -232,6 +235,12 @@ export default function App() {
                   onClick={() => { setActiveTab('Servicios Públicos'); setIsSidebarOpen(false); }} 
                 />
                 <SidebarItem 
+                  icon={<Users size={18} />} 
+                  label="Vecinos" 
+                  active={activeTab === 'Vecinos'} 
+                  onClick={() => { setActiveTab('Vecinos'); setIsSidebarOpen(false); }} 
+                />
+                <SidebarItem 
                   icon={<MessageSquare size={18} />} 
                   label="Mensajes" 
                   active={activeTab === 'Mensajes'} 
@@ -346,6 +355,31 @@ export default function App() {
             >
               <SettingsView />
             </motion.div>
+          ) : activeTab === 'Vecinos' ? (
+            <motion.div 
+              key="vecinos"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+            >
+              <CommunityView 
+                currentUserId={user.id} 
+                onViewProfile={(id) => { setSelectedProfileId(id); setActiveTab('Perfil Público'); }} 
+              />
+            </motion.div>
+          ) : activeTab === 'Perfil Público' && selectedProfileId ? (
+            <motion.div 
+              key="perfil-publico"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+            >
+              <PublicProfileView 
+                userId={selectedProfileId} 
+                currentUserId={user.id} 
+                onBack={() => setActiveTab('Vecinos')} 
+              />
+            </motion.div>
           ) : activeTab === 'Panel Admin' && profile?.role === 'Admin' ? (
             <motion.div 
               key="admin"
@@ -398,13 +432,33 @@ export default function App() {
                     posts.map((post) => (
                       <article key={post.id} className="editorial-card flex flex-col group">
                         <div className="flex-1">
-                          <span className={`category-pill ${post.category === 'Comercio' ? 'bg-brand-commerce-bg text-brand-commerce' : 'bg-sky-50 text-sky-700'}`}>
-                            {post.category}
-                          </span>
-                          <h3 className="text-lg md:text-xl mb-4 leading-tight group-hover:text-brand-primary transition-colors">
-                            {post.content.slice(0, 100)}{post.content.length > 100 ? '...' : ''}
-                          </h3>
-                          <p className="text-sm md:text-lg leading-relaxed text-slate-600 mb-8">{post.content}</p>
+                          <div className="flex items-center justify-between mb-6">
+                            <div 
+                              className="flex items-center gap-3 cursor-pointer group/author"
+                              onClick={() => { setSelectedProfileId(post.user_id); setActiveTab('Perfil Público'); }}
+                            >
+                              <img 
+                                src={post.author?.avatar_url || `https://picsum.photos/seed/${post.user_id}/50/50`} 
+                                className="w-10 h-10 rounded-2xl object-cover ring-2 ring-white shadow-sm transition-transform group-hover/author:scale-110"
+                                referrerPolicy="no-referrer"
+                              />
+                              <div>
+                                <h4 className="text-xs font-bold leading-none mb-0.5 group-hover/author:text-brand-primary transition-colors">{post.author?.full_name}</h4>
+                                <p className="text-[10px] text-brand-muted tracking-tight font-medium uppercase font-sans">@{post.author?.username}</p>
+                              </div>
+                            </div>
+                            <span className={`category-pill ${post.category === 'Comercio' ? 'bg-brand-commerce-bg text-brand-commerce' : 'bg-sky-100 text-sky-700'}`}>
+                              {post.category}
+                            </span>
+                          </div>
+                          
+                          {post.image_url && (
+                            <div className="mb-6 rounded-[2rem] overflow-hidden bg-slate-100 aspect-video">
+                              <img src={post.image_url} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                            </div>
+                          )}
+
+                          <p className="text-sm md:text-lg leading-relaxed text-slate-600 mb-8 font-serif italic">{post.content}</p>
                         </div>
                         <PostInteractions post={post} userId={user.id} />
                       </article>
