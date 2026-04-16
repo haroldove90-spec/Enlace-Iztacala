@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Mail, Loader2, ArrowRight } from 'lucide-react';
+import { Mail, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export default function Auth() {
@@ -9,10 +9,8 @@ export default function Auth() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = async (e: any) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-
     setLoading(true);
     setError(null);
 
@@ -24,11 +22,7 @@ export default function Auth() {
     });
 
     if (error) {
-      if (error.message.includes('JSON')) {
-        setError('Error de conexión: No se pudo contactar con la base de datos. Verifica tu conexión o las llaves de acceso en la configuración.');
-      } else {
-        setError(error.message);
-      }
+      setError(error.message);
     } else {
       setSubmitted(true);
     }
@@ -36,87 +30,88 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-brand-bg p-6">
+    <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] p-6">
       <motion.div 
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-sm w-full editorial-card space-y-12 text-center py-16"
+        className="max-w-md w-full bg-white border border-slate-100 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.08)] rounded-3xl p-12 text-center"
       >
-        <div className="flex flex-col items-center">
+        <div className="mb-12">
           <img 
             src="https://appdesignproyectos.com/enlaceiztacala.png" 
-            alt="Enlace Iztacala Logo" 
-            className="w-24 mb-10"
+            alt="Enlace Iztacala" 
+            className="w-20 mx-auto mb-8 grayscale opacity-90"
             referrerPolicy="no-referrer"
           />
-          <h2 className="text-3xl font-serif tracking-tight">Enlace Iztacala</h2>
-          <p className="mt-3 text-[10px] uppercase tracking-[0.3em] text-brand-muted font-bold">
-            Red Comunitaria Boutique
+          <h2 className="text-4xl font-serif text-slate-900 tracking-tight leading-none mb-4">
+            Bienvenido
+          </h2>
+          <p className="text-[10px] uppercase tracking-[0.4em] text-slate-400 font-bold">
+            Portal Comunitario Los Reyes
           </p>
         </div>
 
         {!submitted ? (
-          <form className="space-y-8" onSubmit={handleLogin}>
-            <div className="text-left">
+          <form className="space-y-10" onSubmit={handleLogin}>
+            <div className="relative group">
               <input
                 id="email"
-                name="email"
                 type="email"
-                autoComplete="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="block w-full px-0 py-3 bg-transparent border-b border-slate-200 text-brand-ink placeholder-slate-300 focus:outline-none focus:border-brand-primary transition-all text-base text-center"
-                placeholder="Ingresa tu correo"
+                className="block w-full px-0 py-4 bg-transparent border-b border-slate-100 text-slate-900 placeholder-slate-300 focus:outline-none focus:border-slate-900 transition-all text-lg text-center font-light"
+                placeholder="tu@correo.com"
               />
+              <div className="absolute bottom-0 left-0 w-full h-[1px] bg-slate-900 scale-x-0 group-focus-within:scale-x-100 transition-transform duration-500 origin-center" />
             </div>
 
             {error && (
-              <p className="text-[11px] text-red-500 font-medium">
+              <p className="text-[11px] text-red-500 font-medium animate-pulse">
                 {error}
               </p>
             )}
 
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-4 bg-brand-primary hover:bg-brand-accent transition-all text-white font-bold text-xs tracking-[0.2em] uppercase disabled:opacity-50"
-              >
-                {loading ? (
-                  <Loader2 className="animate-spin mx-auto" size={16} />
-                ) : (
-                  "Solicitar Acceso"
-                )}
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-5 bg-slate-900 hover:bg-black transition-all text-white font-bold text-[10px] tracking-[0.3em] uppercase rounded-full shadow-lg shadow-slate-200 disabled:opacity-50"
+            >
+              {loading ? (
+                <Loader2 className="animate-spin mx-auto" size={16} />
+              ) : (
+                "Solicitar Enlace de Acceso"
+              )}
+            </button>
           </form>
         ) : (
           <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="space-y-6"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="py-6 space-y-8"
           >
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-50 text-brand-primary">
-              <Mail size={24} />
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-slate-50 text-slate-900 mb-2">
+              <Mail size={32} strokeWidth={1.5} />
             </div>
-            <div className="space-y-2">
-              <h3 className="text-xl font-serif">Revisa tu correo</h3>
-              <p className="text-xs text-brand-muted leading-relaxed max-w-[200px] mx-auto">
-                Enviamos un enlace de acceso a <strong>{email}</strong>.
+            <div className="space-y-4">
+              <h3 className="text-2xl font-serif text-slate-900">Verifica tu buzón</h3>
+              <p className="text-sm text-slate-500 font-light leading-relaxed max-w-[280px] mx-auto">
+                Hemos enviado un enlace mágico a <strong>{email}</strong> para que entres sin contraseña.
               </p>
             </div>
             <button 
               onClick={() => setSubmitted(false)}
-              className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-brand-primary transition-colors"
+              className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-slate-900 transition-colors"
             >
-              Volver a intentar
+              ¿No llegó? Intentar con otro correo
             </button>
           </motion.div>
         )}
 
-        <div className="text-[9px] uppercase tracking-widest text-slate-300 font-bold">
-          Acceso Exclusivo para Vecinos
+        <div className="mt-16 pt-8 border-t border-slate-50">
+          <p className="text-[9px] uppercase tracking-[0.2em] text-slate-300 font-semibold">
+            Privacidad & Exclusividad • Los Reyes Iztacala I
+          </p>
         </div>
       </motion.div>
     </div>
