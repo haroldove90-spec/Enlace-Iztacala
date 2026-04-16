@@ -42,7 +42,7 @@ export function useFriendships(currentUserId: string) {
     fetchFriendships();
 
     const channel = supabase
-      .channel('friendships_changes')
+      .channel(`friendships:${currentUserId}`)
       .on('postgres_changes', { 
         event: '*', 
         schema: 'public', 

@@ -38,7 +38,7 @@ export function useCommunityData(currentUserId?: string) {
 
     // Suscripción en tiempo real
     const postSubscription = supabase
-      .channel('public:posts')
+      .channel(`public:posts:${Math.random().toString(36).substring(7)}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, fetchPosts)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'likes' }, fetchPosts)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, fetchPosts)
@@ -63,7 +63,7 @@ export function useCommunityData(currentUserId?: string) {
     fetchIncidents();
 
     const incidentSubscription = supabase
-      .channel('public:incidents')
+      .channel(`public:incidents:${Math.random().toString(36).substring(7)}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'incidents' }, fetchIncidents)
       .subscribe();
 
