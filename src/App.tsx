@@ -24,6 +24,8 @@ import type { Post, Incident, Category, Profile } from './types';
 import { supabase } from './lib/supabase';
 import Auth from './components/Auth';
 import type { User } from '@supabase/supabase-js';
+import { useCommunityData } from './lib/supabase-hooks';
+import NewPostModal from './components/NewPostModal';
 
 // Mock Data
 const MOCK_POSTS: Post[] = [
@@ -89,6 +91,10 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalType, setModalType] = useState<'post' | 'incident'>('post');
+
+  const { posts, incidents, loading: dbLoading } = useCommunityData();
 
   useEffect(() => {
     // Check active sessions
@@ -341,24 +347,34 @@ export default function App() {
               <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-8 xl:gap-12">
                 {/* Main Feed Section */}
                 <section className="space-y-6 md:space-y-10">
-                  {MOCK_POSTS.map((post) => (
-                    <article key={post.id} className="editorial-card flex flex-col justify-between group">
-                      <div>
-                        <span className={`category-pill ${post.category === 'Comercio' ? 'bg-brand-commerce-bg text-brand-commerce' : 'bg-sky-50 text-sky-700'}`}>
-                          {post.category}
-                        </span>
-                        <h3 className="text-lg md:text-xl mb-4 leading-tight group-hover:text-brand-primary transition-colors">{post.content.slice(0, 60)}...</h3>
-                        <p className="text-sm md:text-lg leading-relaxed text-slate-600 mb-8">{post.content}</p>
-                      </div>
-                      <footer className="flex items-center justify-between pt-6 border-t border-slate-100">
-                        <div className="flex items-center gap-4 text-xs text-brand-muted font-medium">
-                          <span className="flex items-center gap-1"><MessageSquare size={14} /> {post.comment_count}</span>
-                          <span className="flex items-center gap-1"><Heart size={14} className="group-hover:text-red-500 transition-colors" /> {post.reaction_count}</span>
+                  {dbLoading && posts.length === 0 ? (
+                    <div className="flex justify-center py-20">
+                      <div className="w-6 h-6 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  ) : posts.length > 0 ? (
+                    posts.map((post) => (
+                      <article key={post.id} className="editorial-card flex flex-col justify-between group">
+                        <div>
+                          <span className={`category-pill ${post.category === 'Comercio' ? 'bg-brand-commerce-bg text-brand-commerce' : 'bg-sky-50 text-sky-700'}`}>
+                            {post.category}
+                          </span>
+                          <h3 className="text-lg md:text-xl mb-4 leading-tight group-hover:text-brand-primary transition-colors">{post.content.slice(0, 60)}...</h3>
+                          <p className="text-sm md:text-lg leading-relaxed text-slate-600 mb-8">{post.content}</p>
                         </div>
-                        <span className="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-wider">{post.author?.full_name}</span>
-                      </footer>
-                    </article>
-                  ))}
+                        <footer className="flex items-center justify-between pt-6 border-t border-slate-100">
+                          <div className="flex items-center gap-4 text-xs text-brand-muted font-medium">
+                            <span className="flex items-center gap-1"><MessageSquare size={14} /> {0}</span>
+                            <span className="flex items-center gap-1"><Heart size={14} className="group-hover:text-red-500 transition-colors" /> {0}</span>
+                          </div>
+                          <span className="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-wider">{post.author?.full_name || 'Vecino'}</span>
+                        </footer>
+                      </article>
+                    ))
+                  ) : (
+                    <div className="text-center py-20 border-2 border-dashed border-slate-100 rounded-[2rem] text-slate-400">
+                      No hay publicaciones hoy. ¡Sé el primero!
+                    </div>
+                  )}
                 </section>
 
                 <aside className="space-y-8">
@@ -368,17 +384,24 @@ export default function App() {
                       <span className="text-[10px] tracking-widest font-bold opacity-40">HOY</span>
                     </div>
                     <div className="space-y-6 flex-1">
-                      {MOCK_INCIDENTS.map((incident) => (
-                        <div key={incident.id} className="pb-4 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors cursor-pointer rounded-lg p-2 -mx-2">
-                          <div className="flex justify-between items-start gap-2 mb-1">
-                            <h4 className="text-sm font-semibold leading-tight">{incident.title}</h4>
-                            <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase bg-brand-primary text-white whitespace-nowrap">{incident.status}</span>
+                      {incidents.length > 0 ? (
+                        incidents.map((incident) => (
+                          <div key={incident.id} className="pb-4 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors cursor-pointer rounded-lg p-2 -mx-2">
+                            <div className="flex justify-between items-start gap-2 mb-1">
+                              <h4 className="text-sm font-semibold leading-tight">{incident.title}</h4>
+                              <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase bg-brand-primary text-white whitespace-nowrap">{incident.status}</span>
+                            </div>
+                            <p className="text-xs text-white/50 flex items-center gap-1 mb-2"><MapPin size={10} /> {incident.location || 'Sin ubicación'}</p>
                           </div>
-                          <p className="text-xs text-white/50 flex items-center gap-1 mb-2"><MapPin size={10} /> {incident.location}</p>
-                        </div>
-                      ))}
+                        ))
+                      ) : (
+                        <p className="text-xs text-white/30 text-center py-10 italic">Sin reportes activos.</p>
+                      )}
                     </div>
-                    <button className="mt-8 w-full py-5 bg-brand-primary hover:bg-brand-accent transition-all text-white font-bold text-[10px] uppercase tracking-[0.2em] rounded-full flex items-center justify-center gap-3">
+                    <button 
+                      onClick={() => { setModalType('incident'); setIsModalOpen(true); }}
+                      className="mt-8 w-full py-5 bg-brand-primary hover:bg-brand-accent transition-all text-white font-bold text-[10px] uppercase tracking-[0.2em] rounded-full flex items-center justify-center gap-3"
+                    >
                       <Plus size={18} /> Nuevo Reporte
                     </button>
                   </section>
@@ -392,6 +415,22 @@ export default function App() {
       <footer className="hidden lg:block fixed bottom-5 right-10 text-[9px] text-brand-muted uppercase tracking-widest font-semibold pointer-events-none">
         Enlace Iztacala • Conectando Los Reyes de forma segura
       </footer>
+
+      {/* Tigger Modal FAB */}
+      <button 
+        onClick={() => { setModalType('post'); setIsModalOpen(true); }}
+        className="fixed bottom-8 right-8 md:bottom-12 md:right-12 w-14 h-14 md:w-16 md:h-16 bg-brand-ink text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-40 group"
+      >
+        <Plus size={24} className="group-hover:rotate-90 transition-transform duration-300" />
+      </button>
+
+      {/* Global New Item Modal */}
+      <NewPostModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        userId={user.id}
+        type={modalType}
+      />
     </div>
   );
 }
