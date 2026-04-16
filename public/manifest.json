@@ -1,0 +1,21 @@
+{
+  "name": "Enlace Iztacala",
+  "short_name": "Iztacala",
+  "description": "Red Comunitaria Boutique para Los Reyes Iztacala",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#0369a1",
+  "icons": [
+    {
+      "src": "https://appdesignproyectos.com/enlaceiztacalaicono.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://appdesignproyectos.com/enlaceiztacalaicono.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
