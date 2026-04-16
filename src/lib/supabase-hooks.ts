@@ -118,7 +118,7 @@ export function useUserPosts(userId: string, currentUserId?: string) {
     fetchUserPosts();
 
     const postSubscription = supabase
-      .channel(`public:posts:${userId}`)
+      .channel(`public:posts:${userId}:${Math.random().toString(36).substring(7)}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'posts', filter: `user_id=eq.${userId}` }, fetchUserPosts)
       .subscribe();
 

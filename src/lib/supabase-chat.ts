@@ -9,6 +9,7 @@ export function useChat(currentUserId: string, friendId: string | null) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const messageChannelRef = useRef<any>(null);
 
   useEffect(() => {
     if (!currentUserId || !friendId) return;
@@ -28,7 +29,7 @@ export function useChat(currentUserId: string, friendId: string | null) {
 
     // 2. Escuchar mensajes nuevos (Tiempo real)
     const messageChannel = supabase
-      .channel(`chat:${[currentUserId, friendId].sort().join('-')}`)
+      .channel(`chat:${[currentUserId, friendId].sort().join('-')}:${Math.random().toString(36).substring(7)}`)
       .on('postgres_changes', { 
         event: 'INSERT', 
         schema: 'public', 
@@ -54,6 +55,8 @@ export function useChat(currentUserId: string, friendId: string | null) {
       })
       .subscribe();
 
+    messageChannelRef.current = messageChannel;
+
     return () => {
       supabase.removeChannel(messageChannel);
     };
@@ -77,9 +80,9 @@ export function useChat(currentUserId: string, friendId: string | null) {
   };
 
   const sendTypingNotification = (isTyping: boolean) => {
-    if (!currentUserId || !friendId) return;
+    if (!currentUserId || !friendId || !messageChannelRef.current) return;
 
-    supabase.channel(`chat:${[currentUserId, friendId].sort().join('-')}`).send({
+    messageChannelRef.current.send({
       type: 'broadcast',
       event: 'typing',
       payload: { userId: currentUserId, isTyping }
