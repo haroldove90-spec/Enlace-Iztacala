@@ -29,6 +29,8 @@ import NewPostModal from './components/NewPostModal';
 import ProfileView from './components/ProfileView';
 import SettingsView from './components/SettingsView';
 import ChatView from './components/ChatView';
+import AdminDashboard from './components/AdminDashboard';
+import BusinessDashboard from './components/BusinessDashboard';
 import PostInteractions from './components/PostInteractions';
 
 // Mock Data
@@ -47,6 +49,8 @@ const MOCK_POSTS: Post[] = [
       username: '@roberto_m',
       full_name: 'Dr. Roberto Mendoza',
       address_verified: true,
+      role: 'User',
+      is_active: true,
       created_at: ''
     }
   },
@@ -64,6 +68,8 @@ const MOCK_POSTS: Post[] = [
       username: '@el_artesano',
       full_name: 'Panadería El Artesano',
       address_verified: true,
+      role: 'Business',
+      is_active: true,
       created_at: ''
     }
   }
@@ -237,6 +243,25 @@ export default function App() {
                   active={activeTab === 'Mi Perfil'} 
                   onClick={() => { setActiveTab('Mi Perfil'); setIsSidebarOpen(false); }} 
                 />
+                
+                {profile?.role === 'Admin' && (
+                  <SidebarItem 
+                    icon={<Shield size={18} />} 
+                    label="Panel Admin" 
+                    active={activeTab === 'Panel Admin'} 
+                    onClick={() => { setActiveTab('Panel Admin'); setIsSidebarOpen(false); }} 
+                  />
+                )}
+
+                {profile?.role === 'Business' && (
+                  <SidebarItem 
+                    icon={<Store size={18} />} 
+                    label="Panel Negocio" 
+                    active={activeTab === 'Panel Negocio'} 
+                    onClick={() => { setActiveTab('Panel Negocio'); setIsSidebarOpen(false); }} 
+                  />
+                )}
+
                 <SidebarItem 
                   icon={<Settings size={18} />} 
                   label="Configuración" 
@@ -320,6 +345,24 @@ export default function App() {
               exit={{ opacity: 0, x: -20 }}
             >
               <SettingsView />
+            </motion.div>
+          ) : activeTab === 'Panel Admin' && profile?.role === 'Admin' ? (
+            <motion.div 
+              key="admin"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <AdminDashboard />
+            </motion.div>
+          ) : activeTab === 'Panel Negocio' && profile?.role === 'Business' ? (
+            <motion.div 
+              key="business"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <BusinessDashboard userId={user.id} />
             </motion.div>
           ) : activeTab === 'Mensajes' ? (
             <motion.div 

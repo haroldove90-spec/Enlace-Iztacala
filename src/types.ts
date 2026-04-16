@@ -1,5 +1,7 @@
 export type Category = 'Seguridad' | 'Comercio' | 'Social' | 'Avisos';
 
+export type UserRole = 'User' | 'Business' | 'Admin';
+
 export interface Profile {
   id: string;
   username: string;
@@ -8,6 +10,8 @@ export interface Profile {
   cover_url?: string;
   bio?: string;
   address_verified: boolean;
+  role: UserRole;
+  is_active: boolean;
   created_at: string;
 }
 
@@ -73,4 +77,25 @@ export interface Incident {
   photo_url?: string;
   location?: string;
   created_at: string;
+}
+
+export interface Business {
+  id: string;
+  user_id: string;
+  business_name: string;
+  description: string;
+  banner_url?: string;
+  payment_status: 'Pending' | 'Paid' | 'Expired';
+  created_at: string;
+  expires_at?: string;
+  owner?: Profile;
+}
+
+export interface Payment {
+  id: string;
+  business_id: string;
+  amount: number;
+  status: 'Pending' | 'Paid' | 'Failed';
+  created_at: string;
+  expires_at?: string;
 }
