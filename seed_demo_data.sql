@@ -114,6 +114,7 @@ CREATE POLICY "Lectura pública" ON comments FOR SELECT USING (true);
 CREATE POLICY "Lectura pública" ON incidents FOR SELECT USING (true);
 
 CREATE POLICY "Update propio perfil" ON profiles FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY "Insert propio perfil" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
 CREATE POLICY "Insertar posts autenticados" ON posts FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Insertar reportes autenticados" ON incidents FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Insertar likes propios" ON likes FOR INSERT WITH CHECK (auth.uid() = user_id);

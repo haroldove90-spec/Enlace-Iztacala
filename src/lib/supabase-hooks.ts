@@ -148,8 +148,8 @@ export async function getComments(postId: string) {
  */
 export async function uploadFile(bucket: string, file: File, userId: string) {
   const fileExt = file.name.split('.').pop();
-  const fileName = `${userId}_${Date.now()}.${fileExt}`;
-  const filePath = `${fileName}`;
+  const fileName = `${Date.now()}.${fileExt}`;
+  const filePath = `${userId}/${fileName}`;
 
   const { error: uploadError } = await supabase.storage
     .from(bucket)
