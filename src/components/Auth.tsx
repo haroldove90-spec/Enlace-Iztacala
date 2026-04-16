@@ -12,8 +12,11 @@ export default function Auth() {
   const handleLogin = async (e: any) => {
     e.preventDefault();
     
-    // Check for configuration first
-    const supabaseUrl = (import.meta as any).env.VITE_SUPABASE_URL;
+    // Check for configuration first safely
+    const getEnv = (key: string) => {
+      try { return (import.meta as any).env[key]; } catch (e) { return undefined; }
+    };
+    const supabaseUrl = getEnv('VITE_SUPABASE_URL');
     if (!supabaseUrl || supabaseUrl.includes('placeholder')) {
       setError('Error de configuración: Faltan las variables de entorno de Supabase (URL/Key). Asegúrate de configurarlas en tu plataforma de hosting.');
       return;
