@@ -30,7 +30,11 @@ export default function Auth() {
     });
 
     if (error) {
-      setError(error.message);
+      if (error.message.includes('JSON')) {
+        setError('Error de conexión: No se pudo contactar con la base de datos. Verifica tu conexión o las llaves de acceso en la configuración.');
+      } else {
+        setError(error.message);
+      }
     } else {
       setSubmitted(true);
     }

@@ -1,15 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = (import.meta as any).env.VITE_SUPABASE_URL;
-const supabaseAnonKey = (import.meta as any).env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = (import.meta as any).env.VITE_SUPABASE_URL || 'https://fbtswlienezmvubcfkbq.supabase.co';
+const supabaseAnonKey = (import.meta as any).env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZidHN3bGllbmV6bXZ1YmNma2JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzNDkyMTUsImV4cCI6MjA5MTkyNTIxNX0.Zm5MOk1Y_YM_8nE1BA7J5ArAVqPsvqXLS6A463OJgw0';
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('CRITICAL: Supabase URL or Anon Key is missing. Check your environment variables.');
+if (!supabaseUrl || supabaseUrl.includes('placeholder')) {
+  console.error('CRITICAL: Supabase URL is missing or placeholder.');
 }
 
 export const supabase = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder-key',
+  supabaseUrl,
+  supabaseAnonKey,
   {
     auth: {
       autoRefreshToken: true,
