@@ -111,6 +111,7 @@ export default function App() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
+  const [selectedChatUserId, setSelectedChatUserId] = useState<string | null>(null);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -378,6 +379,10 @@ export default function App() {
                 userId={selectedProfileId} 
                 currentUserId={user.id} 
                 onBack={() => setActiveTab('Vecinos')} 
+                onMessage={(id) => {
+                  setSelectedChatUserId(id);
+                  setActiveTab('Mensajes');
+                }}
               />
             </motion.div>
           ) : activeTab === 'Panel Admin' && profile?.role === 'Admin' ? (
@@ -405,7 +410,7 @@ export default function App() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
             >
-              <ChatView userId={user.id} />
+              <ChatView userId={user.id} preSelectedUserId={selectedChatUserId} />
             </motion.div>
           ) : (
             <motion.div 

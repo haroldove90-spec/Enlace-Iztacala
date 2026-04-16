@@ -18,9 +18,10 @@ interface PublicProfileViewProps {
   userId: string;
   currentUserId: string;
   onBack: () => void;
+  onMessage: (id: string) => void;
 }
 
-export default function PublicProfileView({ userId, currentUserId, onBack }: PublicProfileViewProps) {
+export default function PublicProfileView({ userId, currentUserId, onBack, onMessage }: PublicProfileViewProps) {
   const [targetProfile, setTargetProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const { posts, loading: postsLoading } = useUserPosts(userId, currentUserId);
@@ -92,7 +93,13 @@ export default function PublicProfileView({ userId, currentUserId, onBack }: Pub
               </div>
               <p className="text-sm font-bold tracking-widest uppercase text-brand-muted">@{targetProfile.username}</p>
             </div>
-            <div className="w-full md:w-auto pb-2">
+            <div className="w-full md:w-auto pb-2 flex items-center gap-3">
+                <button
+                  onClick={() => onMessage(targetProfile.id)}
+                  className="px-6 py-3.5 bg-slate-900 hover:bg-brand-primary text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded-full transition-all flex items-center gap-2 shadow-lg shadow-slate-100"
+                >
+                  Mensaje Directo
+                </button>
                 <FriendshipButtons 
                   currentUserId={currentUserId} 
                   targetUserId={targetProfile.id} 

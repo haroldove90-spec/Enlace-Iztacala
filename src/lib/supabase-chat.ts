@@ -32,12 +32,18 @@ export function useChat(currentUserId: string, friendId: string | null) {
       .on('postgres_changes', { 
         event: 'INSERT', 
         schema: 'public', 
-        table: 'messages',
-        filter: `recipient_id=eq.${currentUserId}` 
+        table: 'messages'
       }, (payload) => {
         const newMessage = payload.new as Message;
-        if (newMessage.sender_id === friendId) {
-          setMessages(prev => [...prev, newMessage]);
+        // Solo añadir si el mensaje pertenece a esta conversación y no ha sido ya añadido localmente
+        const isFromMe = newMessage.sender_id === currentUserId && newMessage.recipient_id === friendId;
+        const isFromThem = newMessage.sender_id === friendId && newMessage.recipient_id === currentUserId;
+        
+        if (isFromThem) {
+          setMessages(prev => {
+            if (prev.some(m => m.id === newMessage.id)) return prev;
+            return [...prev, newMessage];
+          });
         }
       })
       // 3. Sistema de Presencia / Escribiendo...

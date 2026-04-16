@@ -12,6 +12,7 @@ export interface Profile {
   address_verified: boolean;
   role: UserRole;
   is_active: boolean;
+  dob?: string;
   created_at: string;
 }
 
