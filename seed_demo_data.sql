@@ -6,6 +6,8 @@
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 DROP FUNCTION IF EXISTS public.handle_new_user();
 DROP TABLE IF EXISTS public.incidents CASCADE;
+DROP TABLE IF EXISTS public.comments CASCADE;
+DROP TABLE IF EXISTS public.likes CASCADE;
 DROP TABLE IF EXISTS public.posts CASCADE;
 DROP TABLE IF EXISTS public.profiles CASCADE;
 DROP TYPE IF EXISTS post_category CASCADE;
@@ -17,7 +19,7 @@ CREATE TYPE incident_status AS ENUM ('Reportado', 'En Proceso', 'Resuelto');
 
 -- 3. TABLA DE PERFILES
 CREATE TABLE public.profiles (
-  id UUID PRIMARY KEY, -- Compatible con Auth pero flexible para datos Mock
+  id UUID PRIMARY KEY,
   username TEXT UNIQUE,
   full_name TEXT,
   avatar_url TEXT,
@@ -37,7 +39,24 @@ CREATE TABLE public.posts (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 5. TABLA DE REPORTES / INCIDENTES
+-- 5. TABLA DE INTERACCIONES (LIKES Y COMENTARIOS)
+CREATE TABLE public.likes (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  post_id UUID REFERENCES public.posts(id) ON DELETE CASCADE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, post_id)
+);
+
+CREATE TABLE public.comments (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  post_id UUID REFERENCES public.posts(id) ON DELETE CASCADE NOT NULL,
+  content TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 6. TABLA DE REPORTES / INCIDENTES
 CREATE TABLE public.incidents (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
@@ -49,7 +68,7 @@ CREATE TABLE public.incidents (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 6. DATOS DE MUESTRA (LOS REYES IZTACALA)
+-- 7. DATOS DE MUESTRA (LOS REYES IZTACALA)
 INSERT INTO public.profiles (id, username, full_name, bio, address_verified)
 VALUES 
   ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d', 'dr_mendoza', 'Dr. Roberto Mendoza', 'Médico jubilado. Vecino de Los Reyes desde hace 30 años. Seguridad ante todo.', true),
@@ -59,40 +78,11 @@ ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO public.posts (user_id, content, category)
 VALUES 
-  (
-    'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d', 
-    'Vecinos, aviso que el ayuntamiento ya recibió el reporte de luminarias en la Av. de los Reyes. Vienen el miércoles.', 
-    'Seguridad'
-  ),
-  (
-    'c3d4e5f6-a7b8-4c7d-0e1f-2a3b4c5d6e7f', 
-    '¿Ya probaron nuestras conchas de chocolate amargo? 4x3 para vecinos hoy presentando su app.', 
-    'Comercio'
-  ),
-  (
-    'b2c3d4e5-f6a7-4b6c-9d0e-1f2a3b4c5d6e', 
-    'Jornada de limpieza del Parque Central este domingo 9:00 AM. ¡Traigan bolsas!', 
-    'Social'
-  );
+  ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d', 'Vecinos, aviso que el ayuntamiento ya recibió el reporte de luminarias en la Av. de los Reyes. Vienen el miércoles.', 'Seguridad'),
+  ('c3d4e5f6-a7b8-4c7d-0e1f-2a3b4c5d6e7f', '¿Ya probaron nuestras conchas de chocolate amargo? 4x3 para vecinos hoy presentando su app.', 'Comercio'),
+  ('b2c3d4e5-f6a7-4b6c-9d0e-1f2a3b4c5d6e', 'Jornada de limpieza del Parque Central este domingo 9:00 AM. ¡Traigan bolsas!', 'Social');
 
-INSERT INTO public.incidents (user_id, title, description, status, location)
-VALUES 
-  (
-    'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d', 
-    'Fuga de Agua Potable', 
-    'Fuga considerable en la calle de los Monarcas #14. Urge atención.', 
-    'Reportado', 
-    'Calle de los Monarcas #14'
-  ),
-  (
-    'b2c3d4e5-f6a7-4b6c-9d0e-1f2a3b4c5d6e', 
-    'Recolección de Basura', 
-    'El camión de basura ya completó la ruta en Plaza Central.', 
-    'Resuelto', 
-    'Plaza Central'
-  );
-
--- 7. AUTOSINCRONIZACIÓN DE USUARIOS REALES (TRIGGER)
+-- 8. AUTOSINCRONIZACIÓN DE USUARIOS REALES (TRIGGER)
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
@@ -110,20 +100,30 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- 8. POLÍTICAS DE SEGURIDAD (RLS)
+-- 9. POLÍTICAS DE SEGURIDAD (RLS)
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.posts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.likes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.incidents ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Lectura pública" ON profiles FOR SELECT USING (true);
 CREATE POLICY "Lectura pública" ON posts FOR SELECT USING (true);
+CREATE POLICY "Lectura pública" ON likes FOR SELECT USING (true);
+CREATE POLICY "Lectura pública" ON comments FOR SELECT USING (true);
 CREATE POLICY "Lectura pública" ON incidents FOR SELECT USING (true);
 
 CREATE POLICY "Update propio perfil" ON profiles FOR UPDATE USING (auth.uid() = id);
 CREATE POLICY "Insertar posts autenticados" ON posts FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Insertar reportes autenticados" ON incidents FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Insertar likes propios" ON likes FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Borrar likes propios" ON likes FOR DELETE USING (auth.uid() = user_id);
+CREATE POLICY "Insertar comentarios propios" ON comments FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Borrar comentarios propios" ON comments FOR DELETE USING (auth.uid() = user_id);
 
--- 9. HABILITAR TIEMPO REAL
+-- 10. HABILITAR TIEMPO REAL
 ALTER PUBLICATION supabase_realtime ADD TABLE posts;
 ALTER PUBLICATION supabase_realtime ADD TABLE incidents;
 ALTER PUBLICATION supabase_realtime ADD TABLE profiles;
+ALTER PUBLICATION supabase_realtime ADD TABLE likes;
+ALTER PUBLICATION supabase_realtime ADD TABLE comments;

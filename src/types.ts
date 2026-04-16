@@ -16,12 +16,21 @@ export interface Post {
   content: string;
   image_url?: string;
   category: Category;
-  location_lat?: number;
-  location_long?: number;
+  location?: string;
   created_at: string;
   author?: Profile;
-  comment_count: number;
-  reaction_count: number;
+  likes?: Like[];
+  comments?: Comment[];
+  likes_count?: number;
+  comments_count?: number;
+  has_liked?: boolean;
+}
+
+export interface Like {
+  id: string;
+  post_id: string;
+  user_id: string;
+  created_at: string;
 }
 
 export interface Comment {

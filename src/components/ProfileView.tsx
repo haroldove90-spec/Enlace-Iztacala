@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Camera, ShieldCheck, Mail, User, Info, Loader2, Save } from 'lucide-react';
 import { motion } from 'motion/react';
 import { supabase } from '../lib/supabase';
+import { uploadFile } from '../lib/supabase-hooks';
 import type { Profile } from '../types';
 
 interface ProfileViewProps {
@@ -14,8 +15,10 @@ export default function ProfileView({ profile, userEmail, onUpdate }: ProfileVie
   const [fullName, setFullName] = useState(profile?.full_name || '');
   const [bio, setBio] = useState(profile?.bio || '');
   const [loading, setLoading] = useState(false);
+  const [avatarLoading, setAvatarLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [newPassword, setNewPassword] = useState('');
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,6 +42,31 @@ export default function ProfileView({ profile, userEmail, onUpdate }: ProfileVie
       alert('Error al actualizar perfil');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0] && profile) {
+      const file = e.target.files[0];
+      setAvatarLoading(true);
+
+      try {
+        const publicUrl = await uploadFile('avatars', file, profile.id);
+        
+        const { error } = await supabase
+          .from('profiles')
+          .update({ avatar_url: publicUrl })
+          .eq('id', profile.id);
+
+        if (error) throw error;
+        onUpdate();
+        alert('Foto de perfil actualizada');
+      } catch (error) {
+        console.error('Error al subir avatar:', error);
+        alert('Error al subir la foto. Verifica que el bucket "avatars" exista en Supabase.');
+      } finally {
+        setAvatarLoading(false);
+      }
     }
   };
 
@@ -75,14 +103,31 @@ export default function ProfileView({ profile, userEmail, onUpdate }: ProfileVie
         <div className="bg-slate-50 border-b border-slate-100 p-8 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <div className="relative group">
-              <div className="w-24 h-24 bg-white rounded-full overflow-hidden border-4 border-white shadow-md ring-1 ring-slate-100 group-hover:brightness-90 transition-all cursor-pointer">
-                <img 
-                  src={profile?.avatar_url || `https://picsum.photos/seed/${profile?.id}/200/200`} 
-                  alt="Avatar" 
-                  className="w-full h-full object-cover"
+              <div 
+                onClick={() => avatarInputRef.current?.click()}
+                className="w-24 h-24 bg-white rounded-full overflow-hidden border-4 border-white shadow-md ring-1 ring-slate-100 group-hover:brightness-90 transition-all cursor-pointer flex items-center justify-center"
+              >
+                {avatarLoading ? (
+                  <Loader2 className="animate-spin text-brand-primary" size={24} />
+                ) : (
+                  <img 
+                    src={profile?.avatar_url || `https://picsum.photos/seed/${profile?.id}/200/200`} 
+                    alt="Avatar" 
+                    className="w-full h-full object-cover"
+                  />
+                )}
+                <input 
+                  type="file" 
+                  hidden 
+                  ref={avatarInputRef} 
+                  onChange={handleAvatarChange}
+                  accept="image/*"
                 />
               </div>
-              <button className="absolute bottom-0 right-0 bg-brand-primary text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform">
+              <button 
+                onClick={() => avatarInputRef.current?.click()}
+                className="absolute bottom-0 right-0 bg-brand-primary text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform"
+              >
                 <Camera size={14} />
               </button>
             </div>

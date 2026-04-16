@@ -28,6 +28,7 @@ import { useCommunityData } from './lib/supabase-hooks';
 import NewPostModal from './components/NewPostModal';
 import ProfileView from './components/ProfileView';
 import SettingsView from './components/SettingsView';
+import PostInteractions from './components/PostInteractions';
 
 // Mock Data
 const MOCK_POSTS: Post[] = [
@@ -37,8 +38,9 @@ const MOCK_POSTS: Post[] = [
     content: 'Informamos a los vecinos que se ha completado el reporte ante el ayuntamiento para la reparación de las luminarias frente al parque. Estaremos monitoreando el progreso durante la semana.',
     category: 'Seguridad',
     created_at: new Date().toISOString(),
-    comment_count: 12,
-    reaction_count: 45,
+    comments_count: 12,
+    likes_count: 45,
+    has_liked: false,
     author: {
       id: 'u1',
       username: '@roberto_m',
@@ -53,8 +55,9 @@ const MOCK_POSTS: Post[] = [
     content: 'Prueba nuestras nuevas conchas de chocolate amargo. Promoción para vecinos este fin de semana.',
     category: 'Comercio',
     created_at: new Date(Date.now() - 3600000).toISOString(),
-    comment_count: 5,
-    reaction_count: 28,
+    comments_count: 5,
+    likes_count: 28,
+    has_liked: false,
     author: {
       id: 'u2',
       username: '@el_artesano',
@@ -96,7 +99,7 @@ export default function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<'post' | 'incident'>('post');
 
-  const { posts, incidents, loading: dbLoading } = useCommunityData();
+  const { posts, incidents, loading: dbLoading } = useCommunityData(user?.id);
 
   useEffect(() => {
     // Check active sessions
@@ -326,21 +329,17 @@ export default function App() {
                     </div>
                   ) : posts.length > 0 ? (
                     posts.map((post) => (
-                      <article key={post.id} className="editorial-card flex flex-col justify-between group">
-                        <div>
+                      <article key={post.id} className="editorial-card flex flex-col group">
+                        <div className="flex-1">
                           <span className={`category-pill ${post.category === 'Comercio' ? 'bg-brand-commerce-bg text-brand-commerce' : 'bg-sky-50 text-sky-700'}`}>
                             {post.category}
                           </span>
-                          <h3 className="text-lg md:text-xl mb-4 leading-tight group-hover:text-brand-primary transition-colors">{post.content.slice(0, 60)}...</h3>
+                          <h3 className="text-lg md:text-xl mb-4 leading-tight group-hover:text-brand-primary transition-colors">
+                            {post.content.slice(0, 100)}{post.content.length > 100 ? '...' : ''}
+                          </h3>
                           <p className="text-sm md:text-lg leading-relaxed text-slate-600 mb-8">{post.content}</p>
                         </div>
-                        <footer className="flex items-center justify-between pt-6 border-t border-slate-100">
-                          <div className="flex items-center gap-4 text-xs text-brand-muted font-medium">
-                            <span className="flex items-center gap-1"><MessageSquare size={14} /> {0}</span>
-                            <span className="flex items-center gap-1"><Heart size={14} className="group-hover:text-red-500 transition-colors" /> {0}</span>
-                          </div>
-                          <span className="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-wider">{post.author?.full_name || 'Vecino'}</span>
-                        </footer>
+                        <PostInteractions post={post} userId={user.id} />
                       </article>
                     ))
                   ) : (

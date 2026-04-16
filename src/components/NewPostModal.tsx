@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Send, MapPin, Tag, Loader2 } from 'lucide-react';
-import { createPost, createIncident } from '../lib/supabase-hooks';
+import { X, Send, MapPin, Tag, Loader2, Image as ImageIcon, Video, Paperclip } from 'lucide-react';
+import { createPost, createIncident, uploadFile } from '../lib/supabase-hooks';
 
 interface NewItemModalProps {
   isOpen: boolean;
@@ -16,26 +16,42 @@ export default function NewItemModal({ isOpen, onClose, userId, type }: NewItemM
   const [category, setCategory] = useState('Social');
   const [location, setLocation] = useState('');
   const [loading, setLoading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      // Validar tamaño/tipo si es necesario
+      setSelectedFile(file);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      let fileUrl = '';
+      if (selectedFile) {
+        fileUrl = await uploadFile('post-assets', selectedFile, userId);
+      }
+
       if (type === 'post') {
-        await createPost(content, category, userId);
+        await createPost(content, category, userId, fileUrl);
       } else {
-        await createIncident(title, content, location, userId);
+        await createIncident(title, content, location, userId, fileUrl);
       }
       
       // Limpiar y cerrar
       setContent('');
       setTitle('');
       setLocation('');
+      setSelectedFile(null);
       onClose();
     } catch (error) {
       console.error('Error al publicar:', error);
-      alert('Hubo un error al publicar. Inténtalo de nuevo.');
+      alert('Hubo un error al publicar. Verifica que el bucket "post-assets" exista en Supabase.');
     } finally {
       setLoading(false);
     }
@@ -59,7 +75,7 @@ export default function NewItemModal({ isOpen, onClose, userId, type }: NewItemM
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed inset-x-4 top-[10%] max-w-lg mx-auto bg-white rounded-[2.5rem] shadow-2xl z-[110] overflow-hidden border border-slate-100"
+            className="fixed inset-x-4 top-[8%] max-w-lg mx-auto bg-white rounded-[2.5rem] shadow-2xl z-[110] overflow-hidden border border-slate-100 max-h-[85vh] overflow-y-auto"
           >
             <div className="p-8 md:p-10">
               <header className="flex justify-between items-center mb-8">
@@ -120,6 +136,37 @@ export default function NewItemModal({ isOpen, onClose, userId, type }: NewItemM
                     placeholder={type === 'post' ? "Escribe aquí tu mensaje para los vecinos..." : "Describe el problema para que el ayuntamiento o vecinos puedan identificarlo..."}
                     className="w-full bg-slate-50 border-none rounded-[2rem] px-6 py-5 text-sm focus:ring-2 focus:ring-brand-primary/20 transition-all outline-none resize-none"
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase tracking-widest font-bold text-slate-400 flex items-center gap-2">
+                    <Paperclip size={12} /> Multimedia
+                  </label>
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full border-2 border-dashed border-slate-100 rounded-2xl p-6 flex flex-col items-center justify-center gap-2 hover:bg-slate-50 cursor-pointer transition-all"
+                  >
+                    <input 
+                      type="file" 
+                      hidden 
+                      ref={fileInputRef} 
+                      onChange={handleFileChange}
+                      accept="image/*,video/*"
+                    />
+                    {selectedFile ? (
+                      <p className="text-sm font-medium text-brand-primary truncate max-w-full">
+                        {selectedFile.name}
+                      </p>
+                    ) : (
+                      <>
+                        <div className="flex gap-2">
+                          <ImageIcon size={20} className="text-slate-300" />
+                          <Video size={20} className="text-slate-300" />
+                        </div>
+                        <p className="text-xs text-slate-400 font-medium">Click para subir foto o video</p>
+                      </>
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-2">
