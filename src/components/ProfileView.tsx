@@ -75,9 +75,10 @@ export default function ProfileView({ profile, userId, userEmail, onUpdate }: Pr
         if (error) throw error;
         onUpdate();
         alert('Foto de perfil actualizada');
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error al subir avatar:', error);
-        alert('Error al subir la foto. Verifica que el bucket "avatars" sea público en Supabase.');
+        const msg = error.message || 'Error desconocido';
+        alert(`Error al subir la foto: ${msg}. Verifica que el bucket "avatars" sea público y tengas políticas RLS.`);
       } finally {
         setAvatarLoading(false);
       }

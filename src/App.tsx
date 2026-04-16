@@ -90,7 +90,14 @@ const MOCK_INCIDENTS: Incident[] = [
 ];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('Comunidad');
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('enlace_active_tab') || 'Comunidad';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('enlace_active_tab', activeTab);
+  }, [activeTab]);
+
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
