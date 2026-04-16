@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", Georgia, serif;
+  
+  --color-brand-primary: #0369a1;
+  --color-brand-accent: #0284c7;
+  --color-brand-bg: #f8fafc;
+  --color-brand-ink: #1e293b;
+  --color-brand-muted: #64748b;
+  --color-brand-commerce: #9d174d;
+  --color-brand-commerce-bg: #fdf2f8;
+}
+
+@layer base {
+  body {
+    @apply bg-brand-bg text-brand-ink font-sans antialiased;
+  }
+  
+  h1, h2, h3, h4, .serif {
+    @apply font-serif font-bold;
+  }
+}
+
+.glass-morphism {
+  @apply bg-white/70 backdrop-blur-md border border-white/20;
+}
+
+.editorial-card {
+  @apply bg-white border border-slate-200 p-6 transition-all hover:shadow-sm;
+}
+
+.category-pill {
+  @apply inline-block px-3 py-1 bg-slate-100 text-slate-600 text-[10px] uppercase tracking-widest font-bold mb-4;
+}
+
+.sidebar-link {
+  @apply flex items-center gap-3 px-4 py-2 text-sm font-medium text-brand-muted transition-colors hover:text-brand-primary cursor-pointer;
+}
+
+.sidebar-link.active {
+  @apply text-brand-primary;
+}
+
+.brand-title {
+  @apply text-3xl text-brand-primary leading-none mb-2 font-serif;
+}
+
+.brand-subtitle {
+  @apply text-[10px] uppercase tracking-[0.2em] text-brand-muted font-bold;
+}
