@@ -43,7 +43,7 @@ export default function Auth() {
             className="w-20 mx-auto mb-8 grayscale hover:grayscale-0 transition-all duration-700"
             referrerPolicy="no-referrer"
           />
-          <h2 className="text-3xl md:text-5xl font-serif text-slate-900 tracking-tight leading-none mb-4">
+          <h2 className="text-2xl md:text-3xl font-serif text-slate-900 tracking-tight leading-none mb-4 uppercase">
             Bienvenido
           </h2>
           <p className="text-[10px] uppercase tracking-[0.4em] text-slate-400 font-bold">

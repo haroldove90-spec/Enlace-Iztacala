@@ -281,8 +281,8 @@ export default function App() {
               exit={{ opacity: 0, x: -20 }}
               className="max-w-2xl"
             >
-              <header className="mb-8 md:mb-12 pb-5 border-b border-slate-100">
-                <h2 className="text-3xl md:text-5xl tracking-tight leading-none">Mi Perfil</h2>
+              <header className="mb-6 md:mb-10 pb-5 border-b border-slate-100">
+                <h2 className="text-xl md:text-3xl tracking-tight leading-none">Mi Perfil</h2>
               </header>
 
               <div className="editorial-card space-y-8">
@@ -331,8 +331,8 @@ export default function App() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
             >
-              <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 md:mb-12 pb-5 border-b border-slate-100">
-                <h2 className="text-3xl md:text-5xl tracking-tight leading-none">Novedades</h2>
+              <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 md:mb-10 pb-5 border-b border-slate-100">
+                <h2 className="text-xl md:text-3xl tracking-tight leading-none">Novedades</h2>
                 <button className="text-sm font-medium text-brand-primary flex items-center gap-1 hover:gap-2 transition-all self-start sm:self-auto">
                   Ver todo <ChevronRight size={16} />
                 </button>
@@ -347,7 +347,7 @@ export default function App() {
                         <span className={`category-pill ${post.category === 'Comercio' ? 'bg-brand-commerce-bg text-brand-commerce' : 'bg-sky-50 text-sky-700'}`}>
                           {post.category}
                         </span>
-                        <h3 className="text-xl md:text-3xl mb-4 leading-tight group-hover:text-brand-primary transition-colors">{post.content.slice(0, 60)}...</h3>
+                        <h3 className="text-lg md:text-xl mb-4 leading-tight group-hover:text-brand-primary transition-colors">{post.content.slice(0, 60)}...</h3>
                         <p className="text-sm md:text-lg leading-relaxed text-slate-600 mb-8">{post.content}</p>
                       </div>
                       <footer className="flex items-center justify-between pt-6 border-t border-slate-100">
@@ -364,7 +364,7 @@ export default function App() {
                 <aside className="space-y-8">
                   <section className="bg-brand-ink text-brand-bg rounded-[2rem] p-8 flex flex-col min-h-[400px] shadow-xl">
                     <div className="border-b border-white/10 pb-4 mb-8 flex justify-between items-center">
-                      <h3 className="serif text-xl md:text-2xl">Reportes Activos</h3>
+                      <h3 className="serif text-base md:text-lg">Reportes Activos</h3>
                       <span className="text-[10px] tracking-widest font-bold opacity-40">HOY</span>
                     </div>
                     <div className="space-y-6 flex-1">
