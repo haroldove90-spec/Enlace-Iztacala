@@ -25,9 +25,11 @@ export default function ProfileView({ profile, userId, userEmail, onUpdate }: Pr
   }, [profile]);
   const [loading, setLoading] = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
+  const [coverLoading, setCoverLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,13 +76,39 @@ export default function ProfileView({ profile, userId, userEmail, onUpdate }: Pr
 
         if (error) throw error;
         onUpdate();
-        alert('Foto de perfil actualizada');
       } catch (error: any) {
         console.error('Error al subir avatar:', error);
-        const msg = error.message || 'Error desconocido';
-        alert(`Error al subir la foto: ${msg}. Verifica que el bucket "avatars" sea público y tengas políticas RLS.`);
+        alert(`Error al subir la foto: ${error.message}`);
       } finally {
         setAvatarLoading(false);
+      }
+    }
+  };
+
+  const handleCoverChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setCoverLoading(true);
+
+      try {
+        const publicUrl = await uploadFile('covers', file, userId);
+        
+        const { error } = await supabase
+          .from('profiles')
+          .upsert({ 
+            id: userId,
+            cover_url: publicUrl,
+            username: profile?.username || userEmail?.split('@')[0],
+            updated_at: new Date().toISOString()
+          });
+
+        if (error) throw error;
+        onUpdate();
+      } catch (error: any) {
+        console.error('Error al subir portada:', error);
+        alert(`Error al subir la portada: ${error.message}. Asegúrate de crear el bucket "covers" en Supabase.`);
+      } finally {
+        setCoverLoading(false);
       }
     }
   };
@@ -107,137 +135,151 @@ export default function ProfileView({ profile, userId, userEmail, onUpdate }: Pr
   };
 
   return (
-    <div className="max-w-3xl space-y-12">
-      <header className="mb-10 pb-5 border-b border-slate-100">
-        <h2 className="text-xl md:text-3xl tracking-tight leading-none text-brand-ink">Mi Perfil</h2>
-        <p className="text-sm text-brand-muted mt-2">Gestiona tu identidad y seguridad en la comunidad.</p>
+    <div className="max-w-5xl mx-auto space-y-12">
+      <header className="mb-6">
+        <h2 className="text-2xl md:text-4xl brand-title leading-tight">Identidad Vecinal</h2>
+        <p className="brand-subtitle mt-2">Personaliza cómo te ven tus vecinos en Iztacala.</p>
       </header>
 
-      {/* Profile Info Section */}
-      <section className="editorial-card overflow-hidden">
-        <div className="bg-slate-50 border-b border-slate-100 p-8 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <div className="relative group">
+      {/* Profile Visual Identity (FB/LinkedIn Style) */}
+      <section className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
+        {/* Cover Photo */}
+        <div className="relative h-48 md:h-72 bg-slate-100 group">
+          {coverLoading ? (
+            <div className="absolute inset-0 flex items-center justify-center bg-slate-50">
+              <Loader2 className="animate-spin text-brand-primary" />
+            </div>
+          ) : (
+            <img 
+              src={profile?.cover_url || "https://picsum.photos/seed/iztacala-cover/1200/400?blur=2"} 
+              alt="Portada" 
+              className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
+            />
+          )}
+          <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <button 
+            onClick={() => coverInputRef.current?.click()}
+            className="absolute top-6 right-6 px-4 py-2 bg-white/80 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg hover:bg-white transition-all flex items-center gap-2"
+          >
+            <Camera size={14} /> Editar Portada
+          </button>
+          <input type="file" hidden ref={coverInputRef} onChange={handleCoverChange} accept="image/*" />
+        </div>
+
+        {/* Avatar & Basic Info Overlay */}
+        <div className="px-8 md:px-12 pb-10 relative">
+          <div className="flex flex-col md:flex-row md:items-end gap-6 -mt-16 md:-mt-20 mb-8">
+            <div className="relative group/avatar">
               <div 
                 onClick={() => avatarInputRef.current?.click()}
-                className="w-24 h-24 bg-white rounded-full overflow-hidden border-4 border-white shadow-md ring-1 ring-slate-100 group-hover:brightness-90 transition-all cursor-pointer flex items-center justify-center"
+                className="w-32 h-32 md:w-44 md:h-44 bg-white rounded-full overflow-hidden border-8 border-white shadow-xl ring-1 ring-slate-100 cursor-pointer"
               >
                 {avatarLoading ? (
-                  <Loader2 className="animate-spin text-brand-primary" size={24} />
+                  <div className="w-full h-full flex items-center justify-center bg-slate-50">
+                    <Loader2 className="animate-spin text-brand-primary" size={32} />
+                  </div>
                 ) : (
                   <img 
-                    src={profile?.avatar_url || `https://picsum.photos/seed/${userId}/200/200`} 
+                    src={profile?.avatar_url || `https://picsum.photos/seed/${userId}/300/300`} 
                     alt="Avatar" 
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover group-hover/avatar:brightness-90 transition-all"
+                    referrerPolicy="no-referrer"
                   />
                 )}
-                <input 
-                  type="file" 
-                  hidden 
-                  ref={avatarInputRef} 
-                  onChange={handleAvatarChange}
-                  accept="image/*"
-                />
               </div>
               <button 
                 onClick={() => avatarInputRef.current?.click()}
-                className="absolute bottom-0 right-0 bg-brand-primary text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform"
+                className="absolute bottom-2 right-2 md:bottom-4 md:right-4 bg-brand-primary text-white p-2.5 md:p-3 rounded-full shadow-2xl hover:scale-110 transition-transform z-10"
               >
-                <Camera size={14} />
+                <Camera size={16} />
               </button>
+              <input type="file" hidden ref={avatarInputRef} onChange={handleAvatarChange} accept="image/*" />
             </div>
-            <div>
-              <h3 className="text-2xl font-serif text-brand-ink">{profile?.full_name || 'Vecino'}</h3>
-              <p className="text-sm text-brand-muted flex items-center gap-1"><Mail size={12} /> {userEmail}</p>
-            </div>
-          </div>
-          <div className={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest ${
-            profile?.address_verified ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
-          }`}>
-            {profile?.address_verified ? (
-              <span className="flex items-center gap-2"><ShieldCheck size={14} /> Verificado</span>
-            ) : (
-              <span className="flex items-center gap-2"><Info size={14} /> Pendiente</span>
-            )}
-          </div>
-        </div>
 
-        <form onSubmit={handleUpdateProfile} className="p-8 space-y-8">
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Nombre Completo</label>
-              <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
-                <input 
-                  type="text" 
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
+            <div className="flex-1 pb-4">
+              <div className="flex flex-wrap items-center gap-3 mb-2">
+                <h3 className="text-3xl md:text-5xl brand-title font-medium">{profile?.full_name || 'Vecino'}</h3>
+                {profile?.address_verified && (
+                  <div className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 border border-emerald-100">
+                    <ShieldCheck size={14} /> Verificado
+                  </div>
+                )}
+              </div>
+              <p className="text-brand-muted text-base md:text-xl flex items-center gap-2 font-serif italic">
+                {profile?.username ? `@${profile.username}` : userEmail}
+              </p>
+            </div>
+          </div>
+
+          <form onSubmit={handleUpdateProfile} className="grid lg:grid-cols-3 gap-12 pt-8 border-t border-slate-50">
+            <div className="lg:col-span-2 space-y-8">
+              <div className="grid md:grid-cols-2 gap-8">
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Nombre Completo</label>
+                  <div className="relative">
+                    <User className="absolute left-0 top-1/2 -translate-y-1/2 text-brand-primary" size={16} />
+                    <input 
+                      type="text" 
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="w-full pl-8 pr-4 py-4 bg-transparent border-b border-slate-100 focus:border-brand-primary focus:ring-0 outline-none transition-all text-lg"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Email de Contacto</label>
+                  <p className="px-0 py-4 text-brand-ink/60 font-mono text-sm">{userEmail}</p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Biografía / Presentación</label>
+                <textarea 
+                  rows={4}
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  placeholder="Cuéntale a tus vecinos un poco sobre ti..."
+                  className="w-full p-0 py-4 bg-transparent border-b border-slate-100 focus:border-brand-primary focus:ring-0 outline-none transition-all resize-none text-lg font-serif italic leading-relaxed"
                 />
               </div>
             </div>
-            <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Nombre de Usuario</label>
-              <input 
-                type="text" 
-                disabled 
-                value={profile?.username || ''} 
-                className="w-full px-5 py-4 bg-slate-100 border-none rounded-2xl text-sm italic text-slate-400 cursor-not-allowed"
-              />
+
+            <div className="space-y-8">
+              <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100">
+                <h4 className="text-[10px] uppercase tracking-[0.2em] font-bold text-brand-ink mb-6 opacity-60">Acciones de Cuenta</h4>
+                <div className="space-y-4">
+                  <button 
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-4 bg-brand-ink text-white rounded-full font-bold text-[10px] uppercase tracking-widest hover:bg-brand-primary transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {loading ? <Loader2 className="animate-spin" size={16} /> : <><Save size={14} /> Guardar Cambios</>}
+                  </button>
+                  
+                  <div className="pt-6 mt-6 border-t border-slate-200">
+                    <p className="text-[10px] text-brand-muted uppercase tracking-widest mb-4">Actualizar Seguridad</p>
+                    <input 
+                      type="password" 
+                      placeholder="Nueva contraseña"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full px-4 py-3 bg-white border border-slate-100 rounded-xl text-xs mb-3 outline-none focus:ring-1 focus:ring-brand-primary"
+                    />
+                    <button 
+                      type="button"
+                      onClick={handleUpdatePassword}
+                      disabled={passwordLoading || !newPassword}
+                      className="w-full py-3 bg-white border border-slate-200 text-brand-ink rounded-full font-bold text-[9px] uppercase tracking-widest hover:border-brand-ink transition-all disabled:opacity-30"
+                    >
+                      Restablecer Acceso
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Biografía / Presentación</label>
-            <textarea 
-              rows={4}
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              placeholder="Cuéntale a tus vecinos un poco sobre ti..."
-              className="w-full p-6 bg-slate-50 border-none rounded-[2rem] text-sm focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all resize-none"
-            />
-          </div>
-
-          <div className="flex justify-end">
-            <button 
-              type="submit"
-              disabled={loading}
-              className="px-10 py-4 bg-brand-ink text-white rounded-full font-bold text-[11px] uppercase tracking-[0.2em] hover:bg-black transition-all flex items-center gap-2 disabled:opacity-50"
-            >
-              {loading ? <Loader2 className="animate-spin" size={16} /> : <><Save size={14} /> Guardar Cambios</>}
-            </button>
-          </div>
-        </form>
-      </section>
-
-      {/* Security Section */}
-      <section className="editorial-card p-10 space-y-8">
-        <header>
-          <h4 className="text-lg font-serif">Seguridad de la Cuenta</h4>
-          <p className="text-sm text-brand-muted">Actualiza tu contraseña periódicamente.</p>
-        </header>
-
-        <form onSubmit={handleUpdatePassword} className="max-w-md space-y-6">
-          <div className="space-y-2">
-            <label className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Nueva Contraseña</label>
-            <input 
-              type="password" 
-              required
-              minLength={6}
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Mínimo 6 caracteres"
-              className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
-            />
-          </div>
-          <button 
-            type="submit"
-            disabled={passwordLoading}
-            className="w-full py-4 border border-brand-ink text-brand-ink font-bold text-[10px] uppercase tracking-widest rounded-full hover:bg-slate-50 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-          >
-            {passwordLoading ? <Loader2 className="animate-spin" size={16} /> : 'Actualizar Contraseña'}
-          </button>
-        </form>
+          </form>
+        </div>
       </section>
     </div>
   );
