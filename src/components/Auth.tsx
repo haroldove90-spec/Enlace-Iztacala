@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Mail, Loader2, ArrowRight, User, Lock, Calendar, AtSign, ArrowLeft } from 'lucide-react';
+import { Mail, Loader2, ArrowRight, User, Lock, Calendar, AtSign, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [isRegister, setIsRegister] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Form states
@@ -146,13 +147,20 @@ export default function Auth() {
           <div className="relative group">
             <Lock className="absolute left-0 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-sky-700 transition-colors" size={18} />
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="block w-full pl-8 pr-0 py-3 bg-transparent border-b border-slate-100 text-slate-900 placeholder-slate-300 focus:outline-none focus:border-sky-700 transition-all text-sm font-light"
+              className="block w-full pl-8 pr-10 py-3 bg-transparent border-b border-slate-100 text-slate-900 placeholder-slate-300 focus:outline-none focus:border-sky-700 transition-all text-sm font-light"
               placeholder="Contraseña"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-0 top-1/2 -translate-y-1/2 text-slate-300 hover:text-sky-700 transition-colors focus:outline-none"
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           </div>
 
           {error && (
