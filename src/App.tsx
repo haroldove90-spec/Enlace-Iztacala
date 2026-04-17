@@ -34,6 +34,7 @@ import BusinessDashboard from './components/BusinessDashboard';
 import CommunityView from './components/CommunityView';
 import PublicProfileView from './components/PublicProfileView';
 import PostInteractions from './components/PostInteractions';
+import NotificationBell from './components/NotificationBell';
 
 // Mock Data
 const MOCK_POSTS: Post[] = [
@@ -176,12 +177,15 @@ export default function App() {
           />
           <span className="font-serif font-bold text-lg leading-none">Iztacala</span>
         </div>
-        <button 
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="p-2 text-brand-muted hover:text-brand-primary transition-colors"
-        >
-          {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        <div className="flex items-center gap-2">
+          <NotificationBell userId={user.id} />
+          <button 
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="p-2 text-brand-muted hover:text-brand-primary transition-colors"
+          >
+            {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
       </header>
 
       {/* Sidebar / Overlay Navigation */}
@@ -420,10 +424,15 @@ export default function App() {
               exit={{ opacity: 0, x: 20 }}
             >
               <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 md:mb-10 pb-5 border-b border-slate-100">
-                <h2 className="text-xl md:text-3xl tracking-tight leading-none">Novedades</h2>
-                <button className="text-sm font-medium text-brand-primary flex items-center gap-1 hover:gap-2 transition-all self-start sm:self-auto">
-                  Ver todo <ChevronRight size={16} />
-                </button>
+                <div className="flex items-end justify-between w-full h-full">
+                  <h2 className="text-xl md:text-3xl tracking-tight leading-none">Novedades</h2>
+                  <div className="flex items-center gap-4">
+                    <NotificationBell userId={user.id} />
+                    <button className="text-sm font-medium text-brand-primary flex items-center gap-1 hover:gap-2 transition-all">
+                      Ver todo <ChevronRight size={16} />
+                    </button>
+                  </div>
+                </div>
               </header>
 
               <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-8 xl:gap-12">

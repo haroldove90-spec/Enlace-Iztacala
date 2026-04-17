@@ -7,7 +7,8 @@ import type { Friendship, FriendshipStatus } from '../types';
  */
 export function useFriendships(currentUserId: string) {
   const [friends, setFriends] = useState<Friendship[]>([]);
-  const [requests, setRequests] = useState<Friendship[]>([]);
+  const [receivedRequests, setReceivedRequests] = useState<Friendship[]>([]);
+  const [sentRequests, setSentRequests] = useState<Friendship[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchFriendships = async () => {
@@ -33,7 +34,8 @@ export function useFriendships(currentUserId: string) {
       });
 
       setFriends(formatted.filter(f => f.status === 'Accepted'));
-      setRequests(formatted.filter(f => f.status === 'Pending' && f.friend_id === currentUserId));
+      setReceivedRequests(formatted.filter(f => f.status === 'Pending' && f.friend_id === currentUserId));
+      setSentRequests(formatted.filter(f => f.status === 'Pending' && f.user_id === currentUserId));
     }
     setLoading(false);
   };
@@ -78,5 +80,13 @@ export function useFriendships(currentUserId: string) {
     if (error) throw error;
   };
 
-  return { friends, requests, loading, sendRequest, updateRequestStatus, removeFriendship };
+  return { 
+    friends, 
+    receivedRequests, 
+    sentRequests, 
+    loading, 
+    sendRequest, 
+    updateRequestStatus, 
+    removeFriendship 
+  };
 }

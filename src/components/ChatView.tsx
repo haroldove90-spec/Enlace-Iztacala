@@ -12,7 +12,7 @@ interface ChatViewProps {
 }
 
 export default function ChatView({ userId, preSelectedUserId }: ChatViewProps) {
-  const { friends, requests, updateRequestStatus, loading: friendsLoading } = useFriendships(userId);
+  const { friends, receivedRequests, updateRequestStatus, loading: friendsLoading } = useFriendships(userId);
   const [selectedFriend, setSelectedFriend] = useState<Profile | null>(null);
   const [conversations, setConversations] = useState<Profile[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -112,10 +112,10 @@ export default function ChatView({ userId, preSelectedUserId }: ChatViewProps) {
         </div>
 
         <div className="flex-1">
-          {requests.length > 0 && (
+          {receivedRequests.length > 0 && (
             <div className="p-4 space-y-3 bg-brand-primary/5">
               <p className="text-[10px] font-bold uppercase tracking-widest text-brand-primary px-2">Solicitudes Pendientes</p>
-              {requests.map(req => (
+              {receivedRequests.map(req => (
                 <div key={req.id} className="p-3 bg-white rounded-2xl shadow-sm border border-brand-primary/10 flex flex-col gap-2">
                   <div className="flex items-center gap-3">
                     <img src={req.friend?.avatar_url || `https://picsum.photos/seed/${req.id}/100/100`} className="w-8 h-8 rounded-full object-cover" referrerPolicy="no-referrer" />

@@ -10,7 +10,7 @@ import {
 import { supabase } from '../lib/supabase';
 import { useUserPosts } from '../lib/supabase-hooks';
 import { useFriendships } from '../lib/supabase-friendships';
-import FriendshipButtons from './FriendshipButtons';
+import ConnectButton from './ConnectButton';
 import PostInteractions from './PostInteractions';
 import type { Profile, Post } from '../types';
 
@@ -100,7 +100,7 @@ export default function PublicProfileView({ userId, currentUserId, onBack, onMes
                 >
                   Mensaje Directo
                 </button>
-                <FriendshipButtons 
+                <ConnectButton 
                   currentUserId={currentUserId} 
                   targetUserId={targetProfile.id} 
                 />

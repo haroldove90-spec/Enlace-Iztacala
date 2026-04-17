@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useFriendships } from '../lib/supabase-friendships';
-import FriendshipButtons from './FriendshipButtons';
+import ConnectButton from './ConnectButton';
 import type { Profile } from '../types';
 
 interface CommunityViewProps {
@@ -97,7 +97,7 @@ export default function CommunityView({ currentUserId, onViewProfile }: Communit
               </p>
 
               <div className="w-full space-y-3">
-                <FriendshipButtons 
+                <ConnectButton 
                   currentUserId={currentUserId} 
                   targetUserId={p.id} 
                 />
