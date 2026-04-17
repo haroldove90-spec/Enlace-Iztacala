@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { Camera, ShieldCheck, Mail, User, Info, Loader2, Save } from 'lucide-react';
-import { motion } from 'motion/react';
+import { Camera, ShieldCheck, Mail, User, Info, Loader2, Save, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from '../lib/supabase';
 import { uploadFile } from '../lib/supabase-hooks';
 import type { Profile } from '../types';
@@ -27,7 +27,14 @@ export default function ProfileView({ profile, userId, userEmail, onUpdate }: Pr
   const [avatarLoading, setAvatarLoading] = useState(false);
   const [coverLoading, setCoverLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
-  const [newPassword, setNewPassword] = useState('');
+  const [passwords, setPasswords] = useState({
+    current: '',
+    new: '',
+    confirm: ''
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [passwordFeedback, setPasswordFeedback] = useState<{ type: 'error' | 'success', msg: string } | null>(null);
+
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
@@ -115,20 +122,40 @@ export default function ProfileView({ profile, userId, userEmail, onUpdate }: Pr
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newPassword) return;
+    setPasswordFeedback(null);
+
+    if (!passwords.new || !passwords.confirm) {
+        setPasswordFeedback({ type: 'error', msg: 'Completa los campos de nueva contraseña.' });
+        return;
+    }
+
+    if (passwords.new.length < 6) {
+        setPasswordFeedback({ type: 'error', msg: 'La contraseña debe tener al menos 6 caracteres.' });
+        return;
+    }
+
+    if (passwords.new !== passwords.confirm) {
+        setPasswordFeedback({ type: 'error', msg: 'Las contraseñas no coinciden.' });
+        return;
+    }
+
     setPasswordLoading(true);
 
     try {
       const { error } = await supabase.auth.updateUser({
-        password: newPassword
+        password: passwords.new
       });
 
       if (error) throw error;
-      setNewPassword('');
-      alert('Contraseña actualizada con éxito');
-    } catch (error) {
+      
+      setPasswords({ current: '', new: '', confirm: '' });
+      setPasswordFeedback({ type: 'success', msg: 'Contraseña actualizada con éxito.' });
+      
+      // Limpiar mensaje después de 3 seg
+      setTimeout(() => setPasswordFeedback(null), 3000);
+    } catch (error: any) {
       console.error('Error al actualizar contraseña:', error);
-      alert('Error al actualizar contraseña. Recuerda que debe ser de al menos 6 caracteres.');
+      setPasswordFeedback({ type: 'error', msg: error.message || 'Error al actualizar contraseña.' });
     } finally {
       setPasswordLoading(false);
     }
@@ -136,8 +163,8 @@ export default function ProfileView({ profile, userId, userEmail, onUpdate }: Pr
 
   return (
     <div className="max-w-5xl mx-auto space-y-12">
-      <header className="mb-6">
-        <h2 className="text-2xl md:text-4xl brand-title leading-tight">Identidad Vecinal</h2>
+      <header className="mb-6 px-4 md:px-0">
+        <h2 className="text-3xl md:text-4xl brand-title leading-tight">Identidad Vecinal</h2>
         <p className="brand-subtitle mt-2">Personaliza cómo te ven tus vecinos en Iztacala.</p>
       </header>
 
@@ -168,12 +195,12 @@ export default function ProfileView({ profile, userId, userEmail, onUpdate }: Pr
         </div>
 
         {/* Avatar & Basic Info Overlay */}
-        <div className="px-8 md:px-12 pb-10 relative">
-          <div className="flex flex-col md:flex-row md:items-end gap-6 -mt-16 md:-mt-20 mb-8">
-            <div className="relative group/avatar">
+        <div className="px-6 md:px-12 pb-10 relative">
+          <div className="flex flex-col md:flex-row md:items-end gap-6 -mt-12 md:-mt-20 mb-8">
+            <div className="relative group/avatar mx-auto md:mx-0">
               <div 
                 onClick={() => avatarInputRef.current?.click()}
-                className="w-32 h-32 md:w-44 md:h-44 bg-white rounded-full overflow-hidden border-8 border-white shadow-xl ring-1 ring-slate-100 cursor-pointer"
+                className="w-32 h-32 md:w-44 md:h-44 bg-white rounded-full overflow-hidden border-4 md:border-8 border-white shadow-xl ring-1 ring-slate-100 cursor-pointer"
               >
                 {avatarLoading ? (
                   <div className="w-full h-full flex items-center justify-center bg-slate-50">
@@ -257,22 +284,63 @@ export default function ProfileView({ profile, userId, userEmail, onUpdate }: Pr
                     {loading ? <Loader2 className="animate-spin" size={16} /> : <><Save size={14} /> Guardar Cambios</>}
                   </button>
                   
-                  <div className="pt-6 mt-6 border-t border-slate-200">
-                    <p className="text-[10px] text-brand-muted uppercase tracking-widest mb-4">Actualizar Seguridad</p>
-                    <input 
-                      type="password" 
-                      placeholder="Nueva contraseña"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      className="w-full px-4 py-3 bg-white border border-slate-100 rounded-xl text-xs mb-3 outline-none focus:ring-1 focus:ring-brand-primary"
-                    />
+                  <div className="pt-6 mt-6 border-t border-slate-200 space-y-4">
+                    <p className="text-[10px] text-brand-muted uppercase tracking-widest mb-1">Actualizar Seguridad</p>
+                    
+                    <div className="space-y-3">
+                      {/* Campos de Contraseña */}
+                      {[
+                        { id: 'new', label: 'Nueva Contraseña', value: passwords.new },
+                        { id: 'confirm', label: 'Confirmar Nueva Contraseña', value: passwords.confirm }
+                      ].map((field) => (
+                        <div key={field.id} className="relative group">
+                          <input 
+                            type={showPassword ? 'text' : 'password'}
+                            placeholder={field.label}
+                            value={field.value}
+                            onChange={(e) => setPasswords(prev => ({ ...prev, [field.id]: e.target.value }))}
+                            className="w-full px-4 py-3 bg-white border border-slate-100 rounded-xl text-xs outline-none focus:ring-1 focus:ring-brand-primary transition-all pr-10"
+                          />
+                          <button 
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-brand-primary transition-colors"
+                          >
+                            {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    <AnimatePresence>
+                      {passwordFeedback && (
+                        <motion.div 
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className={`p-3 rounded-xl flex items-center gap-2 text-[10px] font-medium ${
+                            passwordFeedback.type === 'success' 
+                            ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' 
+                            : 'bg-rose-50 text-rose-600 border border-rose-100'
+                          }`}
+                        >
+                          {passwordFeedback.type === 'success' ? <CheckCircle size={12} /> : <AlertCircle size={12} />}
+                          {passwordFeedback.msg}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
                     <button 
                       type="button"
                       onClick={handleUpdatePassword}
-                      disabled={passwordLoading || !newPassword}
-                      className="w-full py-3 bg-white border border-slate-200 text-brand-ink rounded-full font-bold text-[9px] uppercase tracking-widest hover:border-brand-ink transition-all disabled:opacity-30"
+                      disabled={passwordLoading || !passwords.new}
+                      className="w-full py-3 bg-white border border-slate-200 text-brand-ink rounded-full font-bold text-[9px] uppercase tracking-widest hover:border-brand-ink transition-all disabled:opacity-30 disabled:grayscale transform active:scale-95 flex items-center justify-center gap-2"
                     >
-                      Restablecer Acceso
+                      {passwordLoading ? (
+                        <Loader2 className="animate-spin" size={12} />
+                      ) : (
+                        'Restablecer Acceso'
+                      )}
                     </button>
                   </div>
                 </div>

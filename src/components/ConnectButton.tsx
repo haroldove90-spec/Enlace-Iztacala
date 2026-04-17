@@ -43,6 +43,20 @@ export default function ConnectButton({ currentUserId, targetUserId }: ConnectBu
     }
   };
 
+  const handleAccept = async () => {
+    if (!received) return;
+    setIsActionLoading(true);
+    try {
+      await updateRequestStatus(received.id, 'Accepted');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    } catch (error) {
+      console.error('Error accepting friendship:', error);
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
   if (friendship) {
     return (
       <button 
@@ -70,9 +84,11 @@ export default function ConnectButton({ currentUserId, targetUserId }: ConnectBu
       <div className="w-full p-2 bg-brand-primary/5 rounded-2xl border border-brand-primary/10 text-center">
         <p className="text-[9px] text-brand-primary font-bold uppercase tracking-widest mb-2">Te envió solicitud</p>
         <button 
-          className="w-full py-2 bg-brand-primary text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-brand-ink transition-all"
+          onClick={handleAccept}
+          disabled={isActionLoading}
+          className="w-full py-2 bg-brand-primary text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-brand-ink transition-all flex items-center justify-center gap-2"
         >
-          Aceptar Conexión
+          {isActionLoading ? <Loader2 size={12} className="animate-spin" /> : 'Aceptar Conexión'}
         </button>
       </div>
     );

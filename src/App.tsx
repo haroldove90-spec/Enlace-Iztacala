@@ -35,6 +35,7 @@ import CommunityView from './components/CommunityView';
 import PublicProfileView from './components/PublicProfileView';
 import PostInteractions from './components/PostInteractions';
 import NotificationBell from './components/NotificationBell';
+import FloatingChat from './components/FloatingChat';
 
 // Mock Data
 const MOCK_POSTS: Post[] = [
@@ -526,7 +527,7 @@ export default function App() {
       {/* Tigger Modal FAB */}
       <button 
         onClick={() => { setModalType('post'); setIsModalOpen(true); }}
-        className="fixed bottom-8 right-8 md:bottom-12 md:right-12 w-14 h-14 md:w-16 md:h-16 bg-brand-ink text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-40 group"
+        className="fixed bottom-28 right-8 md:bottom-12 md:right-12 w-14 h-14 md:w-16 md:h-16 bg-brand-ink text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-40 group"
       >
         <Plus size={24} className="group-hover:rotate-90 transition-transform duration-300" />
       </button>
@@ -538,6 +539,8 @@ export default function App() {
         userId={user.id}
         type={modalType}
       />
+
+      <FloatingChat currentUserId={user.id} />
     </div>
   );
 }

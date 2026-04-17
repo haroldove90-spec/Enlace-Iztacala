@@ -75,10 +75,10 @@ export default function NewItemModal({ isOpen, onClose, userId, type }: NewItemM
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed inset-x-4 top-[8%] max-w-lg mx-auto bg-white rounded-[2.5rem] shadow-2xl z-[110] overflow-hidden border border-slate-100 max-h-[85vh] overflow-y-auto"
+            className="fixed inset-x-4 top-[5%] bottom-[5%] md:inset-x-auto md:top-[8%] md:bottom-auto md:left-1/2 md:-translate-x-1/2 md:max-w-lg w-full bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-2xl z-[110] overflow-hidden border border-slate-100 flex flex-col"
           >
-            <div className="p-8 md:p-10">
-              <header className="flex justify-between items-center mb-8">
+            <div className="p-6 md:p-10 overflow-y-auto flex-1">
+              <header className="flex justify-between items-center mb-6 md:mb-8">
                 <h3 className="text-2xl font-serif">
                   {type === 'post' ? 'Nueva Publicación' : 'Reportar Incidente'}
                 </h3>
