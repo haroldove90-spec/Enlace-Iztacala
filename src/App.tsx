@@ -17,7 +17,8 @@ import {
   CheckCircle2,
   XCircle,
   Menu,
-  X
+  X,
+  Bell
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import type { Post, Incident, Category, Profile } from './types';
@@ -35,6 +36,7 @@ import CommunityView from './components/CommunityView';
 import PublicProfileView from './components/PublicProfileView';
 import PostInteractions from './components/PostInteractions';
 import NotificationBell from './components/NotificationBell';
+import NotificationsView from './components/NotificationsView';
 import FloatingChat from './components/FloatingChat';
 
 // Mock Data
@@ -217,7 +219,10 @@ export default function App() {
           <span className="font-serif font-bold text-lg leading-none">Iztacala</span>
         </div>
         <div className="flex items-center gap-2">
-          <NotificationBell userId={user.id} />
+          <NotificationBell 
+            userId={user.id} 
+            onViewAll={() => setActiveTab('Notificaciones')}
+          />
           <button 
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             className="p-2 text-brand-muted hover:text-brand-primary transition-colors"
@@ -277,6 +282,12 @@ export default function App() {
                   label="Servicios Públicos" 
                   active={activeTab === 'Servicios Públicos'} 
                   onClick={() => { setActiveTab('Servicios Públicos'); setIsSidebarOpen(false); }} 
+                />
+                <SidebarItem 
+                  icon={<Bell size={18} />} 
+                  label="Avisos" 
+                  active={activeTab === 'Notificaciones'} 
+                  onClick={() => { setActiveTab('Notificaciones'); setIsSidebarOpen(false); }} 
                 />
                 <SidebarItem 
                   icon={<Users size={18} />} 
@@ -455,6 +466,15 @@ export default function App() {
             >
               <ChatView userId={user.id} preSelectedUserId={selectedChatUserId} />
             </motion.div>
+          ) : activeTab === 'Notificaciones' ? (
+            <motion.div 
+              key="notif-page"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <NotificationsView userId={user.id} onBack={() => setActiveTab('Comunidad')} />
+            </motion.div>
           ) : (
             <motion.div 
               key="feed"
@@ -466,8 +486,14 @@ export default function App() {
                 <div className="flex items-end justify-between w-full h-full">
                   <h2 className="text-xl md:text-3xl tracking-tight leading-none">Novedades</h2>
                   <div className="flex items-center gap-4">
-                    <NotificationBell userId={user.id} />
-                    <button className="text-sm font-medium text-brand-primary flex items-center gap-1 hover:gap-2 transition-all">
+                    <NotificationBell 
+                      userId={user.id} 
+                      onViewAll={() => setActiveTab('Notificaciones')}
+                    />
+                    <button 
+                      onClick={() => setActiveTab('Notificaciones')}
+                      className="text-sm font-medium text-brand-primary flex items-center gap-1 hover:gap-2 transition-all"
+                    >
                       Ver todo <ChevronRight size={16} />
                     </button>
                   </div>

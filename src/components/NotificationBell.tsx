@@ -7,9 +7,10 @@ import { es } from 'date-fns/locale';
 
 interface NotificationBellProps {
   userId: string;
+  onViewAll?: () => void;
 }
 
-export default function NotificationBell({ userId }: NotificationBellProps) {
+export default function NotificationBell({ userId, onViewAll }: NotificationBellProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications(userId);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -65,25 +66,33 @@ export default function NotificationBell({ userId }: NotificationBellProps) {
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="absolute right-0 mt-4 w-80 md:w-96 bg-white rounded-[2rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] border border-slate-100 z-[100] overflow-hidden"
+            className="fixed md:absolute right-4 left-4 md:left-auto md:right-0 top-20 md:top-auto md:mt-4 md:w-96 bg-white rounded-[2rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.15)] border border-slate-100 z-[100] overflow-hidden"
           >
             <header className="p-6 border-b border-slate-50 flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-bold text-brand-ink uppercase tracking-wider">Avisos del Vecindario</h3>
                 <p className="text-[10px] text-brand-muted font-serif italic">Tienes {unreadCount} notificaciones nuevas</p>
               </div>
-              {unreadCount > 0 && (
+              <div className="flex items-center gap-2">
+                {unreadCount > 0 && (
+                  <button 
+                    onClick={markAllAsRead}
+                    className="p-2 hover:bg-slate-50 rounded-xl transition-colors text-brand-primary"
+                    title="Marcar todo como leído"
+                  >
+                    <Check size={16} />
+                  </button>
+                )}
                 <button 
-                  onClick={markAllAsRead}
-                  className="p-2 hover:bg-slate-50 rounded-xl transition-colors text-brand-primary"
-                  title="Marcar todo como leído"
+                  onClick={() => setIsOpen(false)}
+                  className="p-2 hover:bg-slate-50 rounded-xl transition-colors text-slate-400 md:hidden"
                 >
-                  <Check size={16} />
+                  <X size={16} />
                 </button>
-              )}
+              </div>
             </header>
 
-            <div className="max-h-[400px] overflow-y-auto overflow-x-hidden">
+            <div className="max-h-[60vh] md:max-h-[400px] overflow-y-auto overflow-x-hidden">
               {notifications.length > 0 ? (
                 <div className="divide-y divide-slate-50">
                   {notifications.map((n) => (
@@ -130,7 +139,13 @@ export default function NotificationBell({ userId }: NotificationBellProps) {
             </div>
 
             <footer className="p-4 bg-slate-50/50 border-t border-slate-50 text-center">
-              <button className="text-[10px] uppercase tracking-widest font-bold text-slate-400 hover:text-brand-primary transition-colors">
+              <button 
+                onClick={() => {
+                  setIsOpen(false);
+                  onViewAll?.();
+                }}
+                className="text-[10px] uppercase tracking-widest font-bold text-slate-400 hover:text-brand-primary transition-colors"
+              >
                 Ver historial completo
               </button>
             </footer>
