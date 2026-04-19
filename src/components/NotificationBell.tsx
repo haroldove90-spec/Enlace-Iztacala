@@ -54,7 +54,7 @@ export default function NotificationBell({ userId, onViewAll }: NotificationBell
       >
         <Bell size={20} className="group-hover:scale-110 transition-transform" />
         {unreadCount > 0 && (
-          <span className="absolute top-2 right-2 w-4 h-4 bg-brand-primary text-white text-[9px] font-bold flex items-center justify-center rounded-full border-2 border-white animate-pulse">
+          <span className="absolute -top-1 -right-1 w-5 h-5 bg-rose-600 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white shadow-sm animate-pulse z-10">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -109,8 +109,9 @@ export default function NotificationBell({ userId, onViewAll }: NotificationBell
                           src={n.actor?.avatar_url || `https://picsum.photos/seed/${n.actor_id}/100/100`} 
                           alt="Actor"
                           className="w-10 h-10 rounded-full object-cover border border-slate-100"
+                          referrerPolicy="no-referrer"
                         />
-                        <div className="absolute -bottom-1 -right-1 p-1 bg-white rounded-full shadow-sm">
+                        <div className="absolute -bottom-1 -right-1 p-1 bg-white rounded-full shadow-sm ring-1 ring-slate-100">
                           {getIcon(n.type)}
                         </div>
                       </div>

@@ -622,12 +622,12 @@ function SidebarItem({ icon, label, active, onClick, unreadCount }: { icon: Reac
       <div className="relative shrink-0">
         {icon}
         {unreadCount ? unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 w-3 h-3 bg-brand-primary rounded-full border-2 border-white" />
+          <span className="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 rounded-full border-2 border-white" />
         ) : null}
       </div>
       <span className="tracking-tight">{label}</span>
       {unreadCount ? unreadCount > 0 && (
-        <span className="ml-auto bg-brand-primary text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+        <span className="ml-auto bg-rose-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm animate-pulse">
           {unreadCount > 9 ? '9+' : unreadCount}
         </span>
       ) : active && <motion.div layoutId="activeDot" className="w-1.5 h-1.5 bg-brand-primary rounded-full ml-auto" />}
