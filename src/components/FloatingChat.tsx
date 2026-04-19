@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageSquare, X, Minimize2, Maximize2, Send, Loader2, Circle, ArrowLeft } from 'lucide-react';
+import { MessageSquare, X, Minimize2, Maximize2, Send, Loader2, Circle, ArrowLeft, Trash2, MoreVertical } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from '../lib/supabase';
 import { useChat } from '../lib/supabase-chat';
 import { useFriendships } from '../lib/supabase-friendships';
+import { toast } from 'react-hot-toast';
 import type { Profile, Message } from '../types';
 
 interface FloatingChatProps {
@@ -18,9 +19,10 @@ export default function FloatingChat({ currentUserId }: FloatingChatProps) {
   const [newMessage, setNewMessage] = useState('');
   const [unreadCount, setUnreadCount] = useState(0);
   const [lastPopup, setLastPopup] = useState<{ actor: Profile; content: string } | null>(null);
+  const [showOptions, setShowOptions] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { friends } = useFriendships(currentUserId);
+  const { friends, removeFriendship } = useFriendships(currentUserId);
   const { messages, isTyping, sendMessage, sendTypingNotification } = useChat(currentUserId, selectedFriend?.id || null);
 
   // Cargar lista de conversaciones (basada en mensajes recientes)
@@ -175,28 +177,85 @@ export default function FloatingChat({ currentUserId }: FloatingChatProps) {
                     <img src={selectedFriend.avatar_url || `https://picsum.photos/seed/${selectedFriend.id}/100/100`} className="w-8 h-8 rounded-full object-cover ring-2 ring-white/20" referrerPolicy="no-referrer" />
                     <div>
                       <h4 className="text-[11px] font-bold tracking-tight">{selectedFriend.full_name}</h4>
-                      <p className="text-[9px] text-emerald-400 font-bold uppercase tracking-widest">
-                        {isTyping ? 'Escribiendo...' : 'En línea'}
-                      </p>
+                      {isTyping ? (
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-widest">Escribiendo</span>
+                          <div className="flex gap-0.5">
+                            <motion.span animate={{ opacity: [0, 1, 0] }} transition={{ repeat: Infinity, duration: 1, times: [0, 0.5, 1] }} className="w-0.5 h-0.5 bg-emerald-400 rounded-full" />
+                            <motion.span animate={{ opacity: [0, 1, 0] }} transition={{ repeat: Infinity, duration: 1, times: [0, 0.5, 1], delay: 0.2 }} className="w-0.5 h-0.5 bg-emerald-400 rounded-full" />
+                            <motion.span animate={{ opacity: [0, 1, 0] }} transition={{ repeat: Infinity, duration: 1, times: [0, 0.5, 1], delay: 0.4 }} className="w-0.5 h-0.5 bg-emerald-400 rounded-full" />
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-[9px] text-emerald-400 font-bold uppercase tracking-widest">
+                          En línea
+                        </p>
+                      )}
                     </div>
                   </>
                 ) : (
                   <h4 className="text-[11px] font-bold tracking-widest uppercase">Mensajes Privados</h4>
                 )}
               </div>
-              <div className="flex items-center gap-1">
-                {selectedFriend && (
-                  <button onClick={() => setSelectedFriend(null)} className="p-1.5 hover:bg-white/10 rounded-lg transition-colors mr-1">
-                    <ArrowLeft size={14} />
+                <div className="flex items-center gap-1">
+                  {selectedFriend && (
+                    <div className="relative">
+                      <button 
+                        onClick={() => setShowOptions(!showOptions)} 
+                        className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
+                      >
+                        <MoreVertical size={14} />
+                      </button>
+                      
+                      <AnimatePresence>
+                        {showOptions && (
+                          <motion.div 
+                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                            className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden z-50 py-1"
+                          >
+                            <button 
+                              onClick={async () => {
+                                if (!confirm(`¿Eliminar a ${selectedFriend.full_name} de tus conexiones?`)) return;
+                                
+                                const friendship = friends.find(f => 
+                                  (f.user_id === currentUserId && f.friend_id === selectedFriend.id) || 
+                                  (f.user_id === selectedFriend.id && f.friend_id === currentUserId)
+                                );
+                                
+                                if (friendship) {
+                                  try {
+                                    await removeFriendship(friendship.id);
+                                    toast.success('Conexión eliminada');
+                                    setSelectedFriend(null);
+                                    setShowOptions(false);
+                                  } catch (e) {
+                                    toast.error('Error al eliminar');
+                                  }
+                                }
+                              }}
+                              className="w-full px-4 py-2 text-left text-[10px] font-bold text-rose-500 uppercase tracking-widest hover:bg-rose-50 flex items-center gap-2"
+                            >
+                              <Trash2 size={12} /> Eliminar Vecino
+                            </button>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  )}
+                  {selectedFriend && (
+                    <button onClick={() => setSelectedFriend(null)} className="p-1.5 hover:bg-white/10 rounded-lg transition-colors mr-1">
+                      <ArrowLeft size={14} />
+                    </button>
+                  )}
+                  <button onClick={() => setIsMinimized(true)} className="p-1.5 hover:bg-white/10 rounded-lg transition-colors">
+                    <Minimize2 size={14} />
                   </button>
-                )}
-                <button onClick={() => setIsMinimized(true)} className="p-1.5 hover:bg-white/10 rounded-lg transition-colors">
-                  <Minimize2 size={14} />
-                </button>
-                <button onClick={() => setIsOpen(false)} className="p-1.5 hover:bg-white/10 rounded-lg transition-colors">
-                  <X size={14} />
-                </button>
-              </div>
+                  <button onClick={() => setIsOpen(false)} className="p-1.5 hover:bg-white/10 rounded-lg transition-colors">
+                    <X size={14} />
+                  </button>
+                </div>
             </header>
 
             {selectedFriend ? (
