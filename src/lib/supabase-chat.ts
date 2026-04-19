@@ -33,8 +33,9 @@ export function useChat(currentUserId: string, friendId: string | null) {
       .on('postgres_changes', { 
         event: 'INSERT', 
         schema: 'public', 
-        table: 'messages',
-        filter: `or(sender_id.eq.${currentUserId},recipient_id.eq.${currentUserId})`
+        table: 'messages'
+        // Nota: Eliminamos el filtro 'or' porque no es compatible con el backend de Realtime de Supabase.
+        // El RLS ya asegura que solo recibamos mensajes donde somos remitentes o destinatarios.
       }, (payload) => {
         const newMessage = payload.new as Message;
         
