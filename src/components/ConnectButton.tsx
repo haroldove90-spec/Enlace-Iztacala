@@ -9,7 +9,14 @@ interface ConnectButtonProps {
 }
 
 export default function ConnectButton({ currentUserId, targetUserId }: ConnectButtonProps) {
-  const { friends, receivedRequests, sentRequests, sendRequest, loading: friendshipsLoading } = useFriendships(currentUserId);
+  const { 
+    friends, 
+    receivedRequests, 
+    sentRequests, 
+    sendRequest, 
+    updateRequestStatus, 
+    loading: friendshipsLoading 
+  } = useFriendships(currentUserId);
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [showToast, setShowToast] = useState(false);
 
