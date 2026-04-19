@@ -38,6 +38,7 @@ import PostInteractions from './components/PostInteractions';
 import NotificationBell from './components/NotificationBell';
 import NotificationsView from './components/NotificationsView';
 import FloatingChat from './components/FloatingChat';
+import { useNotifications } from './lib/supabase-notifications';
 
 // Mock Data
 const MOCK_POSTS: Post[] = [
@@ -160,6 +161,7 @@ export default function App() {
   const [modalType, setModalType] = useState<'post' | 'incident'>('post');
 
   const { posts, incidents, loading: dbLoading } = useCommunityData(user?.id);
+  const { unreadCount: globalUnreadCount } = useNotifications(user?.id || '');
 
   useEffect(() => {
     // Check active sessions
@@ -287,6 +289,7 @@ export default function App() {
                   icon={<Bell size={18} />} 
                   label="Avisos" 
                   active={activeTab === 'Notificaciones'} 
+                  unreadCount={globalUnreadCount}
                   onClick={() => { setActiveTab('Notificaciones'); setIsSidebarOpen(false); }} 
                 />
                 <SidebarItem 
@@ -610,15 +613,24 @@ export default function App() {
   );
 }
 
-function SidebarItem({ icon, label, active, onClick }: { icon: ReactNode, label: string, active?: boolean, onClick: () => void }) {
+function SidebarItem({ icon, label, active, onClick, unreadCount }: { icon: ReactNode, label: string, active?: boolean, onClick: () => void, unreadCount?: number }) {
   return (
     <div 
       onClick={onClick}
       className={`sidebar-link ${active ? 'active' : ''}`}
     >
-      <span className="shrink-0">{icon}</span>
+      <div className="relative shrink-0">
+        {icon}
+        {unreadCount ? unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 w-3 h-3 bg-brand-primary rounded-full border-2 border-white" />
+        ) : null}
+      </div>
       <span className="tracking-tight">{label}</span>
-      {active && <motion.div layoutId="activeDot" className="w-1.5 h-1.5 bg-brand-primary rounded-full ml-auto" />}
+      {unreadCount ? unreadCount > 0 && (
+        <span className="ml-auto bg-brand-primary text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+          {unreadCount > 9 ? '9+' : unreadCount}
+        </span>
+      ) : active && <motion.div layoutId="activeDot" className="w-1.5 h-1.5 bg-brand-primary rounded-full ml-auto" />}
     </div>
   );
 }

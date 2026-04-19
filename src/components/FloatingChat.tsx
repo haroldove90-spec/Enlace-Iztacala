@@ -136,7 +136,7 @@ export default function FloatingChat({ currentUserId }: FloatingChatProps) {
   };
 
   return (
-    <div className="fixed bottom-48 right-8 md:bottom-32 md:right-12 z-[100] flex flex-col items-end gap-4 pointer-events-none">
+    <div className="fixed bottom-24 right-6 md:bottom-28 md:right-10 z-[100] flex flex-col items-end gap-3 pointer-events-none transition-all">
       {/* 1. Popup de Mensaje Entrante */}
       <AnimatePresence>
         {lastPopup && !isOpen && (
@@ -145,16 +145,16 @@ export default function FloatingChat({ currentUserId }: FloatingChatProps) {
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 50, scale: 0.8 }}
             onClick={() => openConversation(lastPopup.actor)}
-            className="pointer-events-auto bg-white p-4 rounded-[2rem] shadow-[0_20px_40px_-10px_rgba(0,0,0,0.2)] border border-slate-100 flex items-center gap-4 cursor-pointer hover:scale-105 transition-all max-w-xs group"
+            className="pointer-events-auto bg-white p-4 rounded-[2rem] shadow-[0_20px_40px_-10px_rgba(0,0,0,0.2)] border border-slate-100 flex items-center gap-4 cursor-pointer hover:scale-105 transition-all max-w-[260px] md:max-w-xs group"
           >
             <div className="relative shrink-0">
-              <img src={lastPopup.actor.avatar_url || `https://picsum.photos/seed/${lastPopup.actor.id}/100/100`} className="w-12 h-12 rounded-full object-cover" referrerPolicy="no-referrer" />
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-brand-primary rounded-full border-2 border-white animate-bounce" />
+              <img src={lastPopup.actor.avatar_url || `https://picsum.photos/seed/${lastPopup.actor.id}/100/100`} className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover" referrerPolicy="no-referrer" />
+              <div className="absolute -top-1 -right-1 w-3 h-3 md:w-4 md:h-4 bg-brand-primary rounded-full border-2 border-white animate-bounce" />
             </div>
             <div className="min-w-0">
-              <p className="text-[10px] font-bold text-brand-primary uppercase tracking-widest mb-1">Mensaje Nuevo</p>
+              <p className="text-[9px] font-bold text-brand-primary uppercase tracking-widest mb-1">Mensaje Nuevo</p>
               <p className="text-xs font-bold text-brand-ink truncate">{lastPopup.actor.full_name}</p>
-              <p className="text-[11px] text-brand-muted truncate italic">"{lastPopup.content}"</p>
+              <p className="text-[10px] text-brand-muted truncate italic">"{lastPopup.content}"</p>
             </div>
           </motion.div>
         )}
@@ -164,10 +164,10 @@ export default function FloatingChat({ currentUserId }: FloatingChatProps) {
       <AnimatePresence>
         {isOpen && !isMinimized && (
           <motion.div 
-            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            initial={{ opacity: 0, y: 50, scale: 0.9, transformOrigin: 'bottom right' }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.9 }}
-            className="pointer-events-auto w-80 h-[450px] bg-white rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.15)] border border-slate-100 flex flex-col overflow-hidden"
+            className="pointer-events-auto fixed md:absolute inset-x-4 bottom-28 md:inset-auto md:right-0 md:bottom-20 w-auto md:w-80 h-[500px] mb-2 bg-white rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.25)] border border-slate-100 flex flex-col overflow-hidden max-h-[70vh] z-[110]"
           >
             {/* Header */}
             <header className="p-4 bg-brand-ink text-white flex items-center justify-between shrink-0">
