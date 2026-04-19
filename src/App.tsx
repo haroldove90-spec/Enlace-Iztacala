@@ -128,7 +128,7 @@ export default function App() {
     if (!user?.id) return;
 
     // Listener global único para notificaciones en tiempo real (Toasts)
-    const channelName = `global_notifs_channel_${user.id}`;
+    const channelName = `notifs_toast_${user.id}_${Math.random().toString(36).substring(7)}`;
     const channel = supabase
       .channel(channelName)
       .on('postgres_changes', { 

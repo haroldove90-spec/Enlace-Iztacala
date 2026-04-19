@@ -48,8 +48,8 @@ export function useNotifications(userId: string) {
   useEffect(() => {
     fetchNotifications();
 
-    // Singleton Channel for notifications to avoid duplicate toasts
-    const channelName = `notifications:${userId}`;
+    // Singleton Channel for notifications with random suffix to avoid "after subscribe" error
+    const channelName = `notifs_hook_${userId}_${Math.random().toString(36).substring(7)}`;
     const channel = supabase
       .channel(channelName)
       .on('postgres_changes', { 
