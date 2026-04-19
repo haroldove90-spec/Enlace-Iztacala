@@ -33,15 +33,18 @@ export function useChat(currentUserId: string, friendId: string | null) {
       .on('postgres_changes', { 
         event: 'INSERT', 
         schema: 'public', 
-        table: 'messages'
+        table: 'messages',
+        filter: `or(sender_id.eq.${currentUserId},recipient_id.eq.${currentUserId})`
       }, (payload) => {
         const newMessage = payload.new as Message;
-        // Solo añadir si el mensaje pertenece a esta conversación y no ha sido ya añadido localmente
+        
+        // Verificar si el mensaje pertenece a ESTA conversación específica
         const isFromMe = newMessage.sender_id === currentUserId && newMessage.recipient_id === friendId;
         const isFromThem = newMessage.sender_id === friendId && newMessage.recipient_id === currentUserId;
         
-        if (isFromThem) {
+        if (isFromMe || isFromThem) {
           setMessages(prev => {
+            // Evitar duplicados (especialmente los insertados localmente por sendMessage)
             if (prev.some(m => m.id === newMessage.id)) return prev;
             return [...prev, newMessage];
           });

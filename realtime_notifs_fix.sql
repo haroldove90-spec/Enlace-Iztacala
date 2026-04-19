@@ -64,3 +64,49 @@ AFTER UPDATE ON public.friendships
 FOR EACH ROW
 WHEN (old.status = 'Pending' AND new.status = 'Accepted')
 EXECUTE FUNCTION public.on_friend_request_accepted();
+
+-- 4. Notificaciones para LIKES
+CREATE OR REPLACE FUNCTION public.on_like_added()
+RETURNS trigger AS $$
+DECLARE
+  post_owner_id UUID;
+BEGIN
+  -- Obtener el dueño del post
+  SELECT user_id INTO post_owner_id FROM public.posts WHERE id = new.post_id;
+  
+  -- Solo notificar si el que da like no es el mismo dueño
+  IF post_owner_id != new.user_id THEN
+    INSERT INTO public.notifications (user_id, actor_id, type, content, source_id)
+    VALUES (post_owner_id, new.user_id, 'like', 'reaccionó a tu publicación.', new.post_id);
+  END IF;
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_like_added_trigger ON public.likes;
+CREATE TRIGGER on_like_added_trigger
+AFTER INSERT ON public.likes
+FOR EACH ROW EXECUTE FUNCTION public.on_like_added();
+
+-- 5. Notificaciones para COMENTARIOS
+CREATE OR REPLACE FUNCTION public.on_comment_added()
+RETURNS trigger AS $$
+DECLARE
+  post_owner_id UUID;
+BEGIN
+  -- Obtener el dueño del post
+  SELECT user_id INTO post_owner_id FROM public.posts WHERE id = new.post_id;
+  
+  -- Solo notificar si el que comenta no es el mismo dueño
+  IF post_owner_id != new.user_id THEN
+    INSERT INTO public.notifications (user_id, actor_id, type, content, source_id)
+    VALUES (post_owner_id, new.user_id, 'comment', 'comentó en tu publicación.', new.post_id);
+  END IF;
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_comment_added_trigger ON public.comments;
+CREATE TRIGGER on_comment_added_trigger
+AFTER INSERT ON public.comments
+FOR EACH ROW EXECUTE FUNCTION public.on_comment_added();

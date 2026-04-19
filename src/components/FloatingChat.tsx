@@ -95,7 +95,7 @@ export default function FloatingChat({ currentUserId }: FloatingChatProps) {
   };
 
   return (
-    <div className="fixed bottom-8 right-8 z-[100] flex flex-col items-end gap-4 pointer-events-none">
+    <div className="fixed bottom-48 right-8 md:bottom-32 md:right-12 z-[100] flex flex-col items-end gap-4 pointer-events-none">
       {/* 1. Popup de Mensaje Entrante */}
       <AnimatePresence>
         {lastPopup && !isOpen && (
