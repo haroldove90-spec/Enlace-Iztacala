@@ -50,17 +50,25 @@ export default function NotificationBell({ userId, onViewAll }: NotificationBell
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Notificaciones / Avisos */}
-      <button 
-        onClick={() => setIsOpen(!isOpen)}
-          className={`p-2 px-3 flex items-center gap-2 rounded-2xl transition-all relative group ${isOpen ? 'bg-brand-primary text-white shadow-lg' : 'bg-white border border-slate-100 text-brand-primary hover:shadow-md'}`}
+        <button 
+          onClick={() => setIsOpen(!isOpen)}
+          className={`p-2 px-3 flex items-center gap-2 rounded-2xl transition-all relative group ${isOpen ? 'bg-brand-primary text-white shadow-lg' : 'bg-white border border-slate-200 text-brand-primary hover:shadow-md'}`}
         >
-          <Bell size={20} className={unreadCount > 0 ? 'animate-bounce' : ''} />
-          <span className="text-[10px] font-bold uppercase tracking-widest hidden md:block">Avisos</span>
-        {unreadCount > 0 && (
-          <span className="absolute -top-2 -right-2 min-w-[20px] h-5 bg-rose-600 text-white text-[10px] font-black flex items-center justify-center rounded-full border-2 border-white shadow-xl animate-bounce z-50 px-1">
-            {unreadCount > 9 ? '9+' : unreadCount}
-          </span>
-        )}
+          <Bell size={18} className={unreadCount > 0 ? 'animate-bounce' : ''} />
+          <span className="text-[11px] font-black uppercase tracking-[0.1em] hidden md:block">Avisos</span>
+          
+          <AnimatePresence>
+            {unreadCount > 0 && (
+              <motion.span 
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+                className="absolute -top-2 -right-2 min-w-[22px] h-[22px] bg-red-600 text-white text-[10px] font-black flex items-center justify-center rounded-full border-2 border-white shadow-xl z-50 px-1.5"
+              >
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </motion.span>
+            )}
+          </AnimatePresence>
         </button>
 
       <AnimatePresence>
