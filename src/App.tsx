@@ -341,7 +341,7 @@ export default function App() {
                   />
                 )}
 
-                {profile?.role === 'Business' && (
+                {(profile?.role === 'Business' || profile?.role === 'Admin') && (
                   <SidebarItem 
                     icon={<Store size={18} />} 
                     label="Panel Negocio" 

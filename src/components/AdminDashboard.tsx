@@ -9,7 +9,10 @@ import {
   Search, 
   TrendingUp,
   ShieldAlert,
-  Loader2
+  Loader2,
+  MessageSquare,
+  Heart,
+  Megaphone
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { Profile, Business, Payment } from '../types';
@@ -20,6 +23,12 @@ export default function AdminDashboard() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [stats, setStats] = useState({
+    posts: 0,
+    likes: 0,
+    comments: 0,
+    incidents: 0
+  });
 
   useEffect(() => {
     fetchData();
@@ -30,10 +39,22 @@ export default function AdminDashboard() {
     const { data: pData } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
     const { data: bData } = await supabase.from('business_directory').select('*, owner:profiles(*)');
     const { data: payData } = await supabase.from('payments').select('*');
+    
+    // Métricas de interacción
+    const { count: postCount } = await supabase.from('posts').select('*', { count: 'exact', head: true });
+    const { count: likeCount } = await supabase.from('likes').select('*', { count: 'exact', head: true });
+    const { count: commentCount } = await supabase.from('comments').select('*', { count: 'exact', head: true });
+    const { count: incidentCount } = await supabase.from('incidents').select('*', { count: 'exact', head: true });
 
     if (pData) setProfiles(pData);
     if (bData) setBusinesses(bData);
     if (payData) setPayments(payData);
+    setStats({
+      posts: postCount || 0,
+      likes: likeCount || 0,
+      comments: commentCount || 0,
+      incidents: incidentCount || 0
+    });
     setLoading(false);
   };
 
@@ -80,6 +101,37 @@ export default function AdminDashboard() {
         <StatCard icon={<CreditCard size={20} />} label="Ingresos Totales" value={`$${totalRevenue.toLocaleString()} MXN`} color="emerald" />
         <StatCard icon={<ShieldAlert size={20} />} label="Vecinos Inactivos" value={profiles.filter(p => !p.is_active).length} color="rose" />
       </div>
+
+      {/* Community Interaction Stats */}
+      <section>
+        <div className="flex items-center gap-3 mb-6">
+          <TrendingUp className="text-brand-primary" size={24} />
+          <h3 className="text-xl font-serif">Impacto y Vida Comunitaria</h3>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <StatCard icon={<MessageSquare size={18} />} label="Publicaciones" value={stats.posts} color="blue" />
+          <StatCard icon={<Heart size={18} />} label="Likes Reales" value={stats.likes} color="rose" />
+          <StatCard icon={<Megaphone size={18} />} label="Conversaciones" value={stats.comments} color="amber" />
+          <StatCard icon={<ShieldAlert size={18} />} label="Reportes" value={stats.incidents} color="rose" />
+        </div>
+      </section>
+
+      {/* Revenue & Economy Section */}
+      <section className="bg-slate-900 text-white rounded-[3rem] p-10 shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-brand-primary/20 rounded-full -mr-32 -mt-32 blur-3xl opacity-50" />
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 relative z-10">
+          <div className="space-y-2">
+            <h3 className="text-2xl font-serif">Economía Circular Iztacala</h3>
+            <p className="text-slate-400 text-sm italic font-serif leading-relaxed max-w-md">
+              Monitoreo de ingresos por suscripciones comerciales y activación de banners publicitarios.
+            </p>
+          </div>
+          <div className="flex flex-col items-end">
+            <p className="text-[10px] uppercase font-black tracking-[0.2em] text-brand-primary mb-2">Fondo Comunitario Acumulado</p>
+            <p className="text-5xl font-serif text-white">${totalRevenue.toLocaleString()} <span className="text-xl text-slate-500">MXN</span></p>
+          </div>
+        </div>
+      </section>
 
       <div className="grid lg:grid-cols-2 gap-12">
         {/* User Management */}
