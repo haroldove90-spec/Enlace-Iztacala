@@ -49,17 +49,19 @@ export default function NotificationBell({ userId, onViewAll }: NotificationBell
 
   return (
     <div className="relative" ref={dropdownRef}>
+      {/* Notificaciones / Avisos */}
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2.5 bg-slate-50 text-slate-400 hover:text-brand-primary hover:bg-white hover:shadow-sm rounded-2xl transition-all relative group"
-      >
-        <Bell size={20} className="group-hover:scale-110 transition-transform" />
+          className={`p-2 px-3 flex items-center gap-2 rounded-2xl transition-all relative group ${isOpen ? 'bg-brand-primary text-white shadow-lg' : 'bg-white border border-slate-100 text-brand-primary hover:shadow-md'}`}
+        >
+          <Bell size={20} className={unreadCount > 0 ? 'animate-bounce' : ''} />
+          <span className="text-[10px] font-bold uppercase tracking-widest hidden md:block">Avisos</span>
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 bg-rose-600 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white shadow-sm animate-pulse z-10">
+          <span className="absolute -top-2 -right-2 min-w-[20px] h-5 bg-rose-600 text-white text-[10px] font-black flex items-center justify-center rounded-full border-2 border-white shadow-xl animate-bounce z-50 px-1">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
-      </button>
+        </button>
 
       <AnimatePresence>
         {isOpen && (

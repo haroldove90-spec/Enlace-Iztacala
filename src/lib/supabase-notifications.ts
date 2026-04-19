@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from './supabase';
 
-export type NotificationType = 'friend_request' | 'message' | 'like' | 'comment';
+export type NotificationType = 'friend_request' | 'message' | 'like' | 'comment' | 'system';
 
 export interface Notification {
   id: string;
@@ -28,21 +28,26 @@ export function useNotifications(userId: string) {
   const fetchNotifications = async () => {
     if (!userId) return;
 
-    const { data, error } = await supabase
-      .from('notifications')
-      .select(`
-        *,
-        actor:profiles(id, username, full_name, avatar_url)
-      `)
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(20);
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select(`
+          *,
+          actor:profiles(id, username, full_name, avatar_url)
+        `)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(50);
 
-    if (!error && data) {
-      setNotifications(data);
-      setUnreadCount(data.filter(n => !n.is_read).length);
+      if (!error && data) {
+        setNotifications(data);
+        setUnreadCount(data.filter(n => !n.is_read).length);
+      }
+    } catch (err) {
+      console.error('Error fetching notifications:', err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {

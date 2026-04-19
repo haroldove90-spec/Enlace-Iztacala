@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNotifications, Notification } from '../lib/supabase-notifications';
+import { supabase } from '../lib/supabase';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Bell, MessageSquare, UserPlus, Heart, MessageCircle, ArrowLeft, CheckCircle2 } from 'lucide-react';
@@ -126,9 +127,26 @@ export default function NotificationsView({ userId, onBack }: NotificationsViewP
             <Bell size={40} className="text-slate-300 relative z-10" />
           </div>
           <h3 className="text-xl font-serif italic text-brand-ink mb-3 uppercase tracking-tight">Zona en calma</h3>
-          <p className="text-[10px] text-brand-muted uppercase font-black tracking-[0.2em] max-w-[200px] mx-auto leading-relaxed">
+          <p className="text-[10px] text-brand-muted uppercase font-black tracking-[0.2em] max-w-[200px] mx-auto leading-relaxed mb-8">
             Parece que no hay avisos nuevos por ahora. Todo tranquilo en el vecindario.
           </p>
+          
+          <button 
+            onClick={async () => {
+              const { error } = await supabase.from('notifications').insert([{
+                user_id: userId,
+                actor_id: userId,
+                type: 'system',
+                content: '¡Esta es una notificación de prueba! El sistema de avisos está funcionando correctamente.'
+              }]);
+              if (error) {
+                alert('Asegúrate de haber ejecutado el script SQL en Supabase: ' + error.message);
+              }
+            }}
+            className="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-[10px] font-bold uppercase tracking-widest text-slate-500 rounded-full transition-all"
+          >
+            Probar Sistema de Avisos
+          </button>
         </div>
       )}
     </div>
