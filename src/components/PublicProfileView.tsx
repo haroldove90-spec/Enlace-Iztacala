@@ -39,9 +39,9 @@ export default function PublicProfileView({ userId, currentUserId, onBack, onMes
     setLoading(true);
     const { data, error } = await supabase
       .from('profiles')
-      .select('*')
+      .select('*, business:business_directory(*)')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
 
     if (data) setTargetProfile(data);
     setLoading(false);
@@ -86,12 +86,21 @@ export default function PublicProfileView({ userId, currentUserId, onBack, onMes
             </div>
             <div className="flex-1 pb-2">
               <div className="flex items-center gap-3 mb-1">
-                <h2 className="text-3xl brand-title leading-none">{targetProfile.full_name}</h2>
+                <h2 className="text-3xl brand-title leading-none">
+                  {targetProfile.role === 'Business' && (targetProfile as any).business?.[0]?.business_name 
+                    ? (targetProfile as any).business[0].business_name 
+                    : targetProfile.full_name}
+                </h2>
                 {targetProfile.role === 'Admin' && (
                   <span className="px-3 py-1 bg-brand-primary/10 text-brand-primary text-[10px] font-bold uppercase tracking-widest rounded-full">Admin</span>
                 )}
+                {targetProfile.role === 'Business' && (
+                  <span className="px-3 py-1 bg-brand-primary/10 text-brand-primary text-[10px] font-bold uppercase tracking-widest rounded-full">Negocio Local</span>
+                )}
               </div>
-              <p className="text-sm font-bold tracking-widest uppercase text-brand-muted">@{targetProfile.username}</p>
+              <p className="text-sm font-bold tracking-widest uppercase text-brand-muted">
+                {targetProfile.role === 'Business' ? 'Comercio Verificado' : `@${targetProfile.username}`}
+              </p>
             </div>
             <div className="w-full md:w-auto pb-2 flex items-center gap-3">
                 <button
@@ -110,9 +119,13 @@ export default function PublicProfileView({ userId, currentUserId, onBack, onMes
           <div className="grid lg:grid-cols-[1.5fr_1fr] gap-12">
             <div className="space-y-8">
               <div className="space-y-2">
-                <h4 className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Biografía</h4>
+                <h4 className="text-[10px] uppercase tracking-widest font-bold text-slate-400">
+                  {targetProfile.role === 'Business' ? 'Sobre el Negocio' : 'Biografía'}
+                </h4>
                 <p className="text-xl font-serif italic text-slate-600 leading-relaxed">
-                  {targetProfile.bio || "Este vecino prefiere mantener un perfil discreto."}
+                  {targetProfile.role === 'Business' && (targetProfile as any).business?.[0]?.description
+                    ? (targetProfile as any).business[0].description
+                    : targetProfile.bio || "Este vecino prefiere mantener un perfil discreto."}
                 </p>
               </div>
 

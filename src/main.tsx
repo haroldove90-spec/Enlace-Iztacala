@@ -17,6 +17,15 @@ try {
     </StrictMode>,
   );
   console.log('React montado correctamente.');
+
+  // Registrar Service Worker para PWA
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('SW registrado corectamente:', reg.scope))
+        .catch(err => console.error('Falla al registrar SW:', err));
+    });
+  }
 } catch (error) {
   console.error('Error durante el montaje de React:', error);
   if (typeof window.onerror === 'function') {

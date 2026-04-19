@@ -18,7 +18,8 @@ import {
   XCircle,
   Menu,
   X,
-  Bell
+  Bell,
+  Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import type { Post, Incident, Category, Profile } from './types';
@@ -33,11 +34,13 @@ import ChatView from './components/ChatView';
 import AdminDashboard from './components/AdminDashboard';
 import BusinessDashboard from './components/BusinessDashboard';
 import CommunityView from './components/CommunityView';
+import LocalCommerceView from './components/LocalCommerceView';
 import PublicProfileView from './components/PublicProfileView';
 import PostInteractions from './components/PostInteractions';
 import NotificationBell from './components/NotificationBell';
 import NotificationsView from './components/NotificationsView';
 import FloatingChat from './components/FloatingChat';
+import PWAInstallPrompt from './components/PWAInstallPrompt';
 import { useNotifications } from './lib/supabase-notifications';
 
 // Mock Data
@@ -353,6 +356,18 @@ export default function App() {
                   active={activeTab === 'Configuración'} 
                   onClick={() => { setActiveTab('Configuración'); setIsSidebarOpen(false); }} 
                 />
+
+                <div className="pt-4 mt-4 border-t border-slate-50">
+                   <button 
+                    onClick={() => {
+                      window.dispatchEvent(new Event('show-pwa-prompt'));
+                    }}
+                    className="flex items-center gap-3 px-4 py-3 w-full text-brand-primary bg-brand-primary/5 rounded-2xl hover:bg-brand-primary/10 transition-all group"
+                  >
+                    <Download size={18} className="group-hover:bounce" />
+                    <span className="text-xs font-black uppercase tracking-widest">Instalar App</span>
+                  </button>
+                </div>
               </nav>
             </div>
 
@@ -441,6 +456,18 @@ export default function App() {
               <CommunityView 
                 currentUserId={user.id} 
                 onViewProfile={(id) => { setSelectedProfileId(id); setActiveTab('Perfil Público'); }} 
+              />
+            </motion.div>
+          ) : activeTab === 'Comercio Local' ? (
+            <motion.div 
+              key="comercio"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+            >
+              <LocalCommerceView 
+                currentUserId={user.id} 
+                onViewBusiness={(id) => { setSelectedProfileId(id); setActiveTab('Perfil Público'); }} 
               />
             </motion.div>
           ) : activeTab === 'Perfil Público' && selectedProfileId ? (
@@ -623,10 +650,12 @@ export default function App() {
         onClose={() => setIsModalOpen(false)}
         userId={user.id}
         type={modalType}
+        userRole={profile?.role}
       />
 
       <Toaster />
       <FloatingChat currentUserId={user.id} />
+      <PWAInstallPrompt />
     </div>
   );
 }
