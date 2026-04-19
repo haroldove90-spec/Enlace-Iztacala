@@ -7,6 +7,7 @@ CREATE TABLE profiles (
   username TEXT UNIQUE NOT NULL,
   full_name TEXT,
   avatar_url TEXT,
+  dob DATE, -- Fecha de nacimiento
   bio TEXT,
   address_verified BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW()
@@ -54,11 +55,12 @@ CREATE TABLE incidents (
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
-  INSERT INTO public.profiles (id, username, full_name)
+  INSERT INTO public.profiles (id, username, full_name, dob)
   VALUES (
     new.id, 
-    split_part(new.email, '@', 1), -- Toma lo que está antes del @ como username inicial
-    COALESCE(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1))
+    COALESCE(new.raw_user_meta_data->>'username', split_part(new.email, '@', 1)), 
+    COALESCE(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)),
+    (new.raw_user_meta_data->>'dob')::DATE
   );
   RETURN new;
 END;
