@@ -31,17 +31,18 @@ export default function NotificationBell({ userId, onViewAll }: NotificationBell
       case 'message': return <MessageSquare size={16} className="text-emerald-500" />;
       case 'like': return <Heart size={16} className="text-rose-500" />;
       case 'comment': return <MessageCircle size={16} className="text-amber-500" />;
+      case 'system': return <Bell size={16} className="text-indigo-500" />;
       default: return <Bell size={16} className="text-slate-400" />;
     }
   };
 
   const getMessage = (notification: Notification) => {
-    const actorName = notification.actor?.full_name || 'Alguien';
     switch (notification.type) {
       case 'friend_request': return `te envió una solicitud de conexión.`;
       case 'message': return `te envió un mensaje privado.`;
       case 'like': return `le dio like a tu publicación.`;
       case 'comment': return `comentó tu publicación.`;
+      case 'system': return `Aviso importante de la administración.`;
       default: return `tiene una actualización para ti.`;
     }
   };
@@ -106,9 +107,9 @@ export default function NotificationBell({ userId, onViewAll }: NotificationBell
                       )}
                       <div className="relative shrink-0">
                         <img 
-                          src={n.actor?.avatar_url || `https://picsum.photos/seed/${n.actor_id}/100/100`} 
+                          src={n.type === 'system' ? '/logo.png' : (n.actor?.avatar_url || `https://picsum.photos/seed/${n.actor_id}/100/100`)} 
                           alt="Actor"
-                          className="w-10 h-10 rounded-full object-cover border border-slate-100"
+                          className="w-10 h-10 rounded-xl object-cover border border-slate-100 shadow-sm"
                           referrerPolicy="no-referrer"
                         />
                         <div className="absolute -bottom-1 -right-1 p-1 bg-white rounded-full shadow-sm ring-1 ring-slate-100">
@@ -116,8 +117,8 @@ export default function NotificationBell({ userId, onViewAll }: NotificationBell
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs text-brand-ink leading-tight">
-                          <span className="font-bold">{n.actor?.full_name || 'Vecino'}</span> {getMessage(n)}
+                        <p className="text-[11px] text-brand-ink leading-tight">
+                          <span className="font-black">{n.type === 'system' ? 'Enlace Iztacala' : (n.actor?.full_name || 'Vecino')}</span> {getMessage(n)}
                         </p>
                         {n.type === 'message' && n.content && (
                           <p className="text-[11px] text-brand-muted mt-1 italic line-clamp-1">

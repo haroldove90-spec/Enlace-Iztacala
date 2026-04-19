@@ -37,8 +37,8 @@ CREATE OR REPLACE FUNCTION public.handle_new_notification(
     p_source_id UUID
 ) RETURNS VOID AS $$
 BEGIN
-    -- Evitar notificaciones a uno mismo
-    IF p_user_id = p_actor_id THEN
+    -- Evitar notificaciones a uno mismo EXCEPTO para avisos de sistema/bienvenida
+    IF p_user_id = p_actor_id AND p_type != 'system' THEN
         RETURN;
     END IF;
 
@@ -46,6 +46,25 @@ BEGIN
     VALUES (p_user_id, p_actor_id, p_type, p_content, p_source_id);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 4. Initial Seed for existing users
+DO $$
+DECLARE
+    v_user_id UUID;
+BEGIN
+    FOR v_user_id IN SELECT id FROM auth.users LOOP
+        -- Aviso de Bienvenida
+        IF NOT EXISTS (SELECT 1 FROM public.notifications WHERE user_id = v_user_id AND type = 'system') THEN
+            INSERT INTO public.notifications (user_id, actor_id, type, content)
+            VALUES (
+                v_user_id, 
+                v_user_id, 
+                'system', 
+                '¡Bienvenido a Enlace Iztacala! Estamos felices de tenerte aquí. Explora las secciones de Seguridad, Comercio y Servicios.'
+            );
+        END IF;
+    END LOOP;
+END $$;
 
 -- 4. Triggers Logic
 

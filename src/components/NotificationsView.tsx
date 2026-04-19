@@ -19,6 +19,7 @@ export default function NotificationsView({ userId, onBack }: NotificationsViewP
       case 'message': return <MessageSquare size={18} className="text-emerald-500" />;
       case 'like': return <Heart size={18} className="text-rose-500" />;
       case 'comment': return <MessageCircle size={18} className="text-amber-500" />;
+      case 'system': return <Bell size={18} className="text-indigo-500" />;
       default: return <Bell size={18} className="text-slate-400" />;
     }
   };
@@ -29,6 +30,7 @@ export default function NotificationsView({ userId, onBack }: NotificationsViewP
       case 'message': return `te envió un mensaje privado.`;
       case 'like': return `le dio like a tu publicación.`;
       case 'comment': return `comentó tu publicación.`;
+      case 'system': return `Aviso de Enlace Iztacala`;
       default: return `tiene una actualización para ti.`;
     }
   };
@@ -72,12 +74,12 @@ export default function NotificationsView({ userId, onBack }: NotificationsViewP
               transition={{ delay: index * 0.05 }}
               key={n.id}
               onClick={() => !n.is_read && markAsRead(n.id)}
-              className={`editorial-card !p-6 flex flex-col sm:flex-row gap-5 cursor-pointer group hover:bg-white/80 transition-all ${!n.is_read ? 'border-brand-primary ring-1 ring-brand-primary/20' : 'border-slate-50'}`}
+              className={`editorial-card !p-6 flex flex-col sm:flex-row gap-5 cursor-pointer group hover:bg-white transition-all ring-offset-4 ring-offset-slate-50 ${!n.is_read ? 'border-rose-500/30 bg-rose-50/10 ring-1 ring-rose-500/10' : 'border-slate-50 bg-white'}`}
             >
               <div className="flex items-center gap-4 sm:shrink-0">
                 <div className="relative">
                   <img 
-                    src={n.actor?.avatar_url || `https://picsum.photos/seed/${n.actor_id}/100/100`} 
+                    src={n.type === 'system' ? '/logo.png' : (n.actor?.avatar_url || `https://picsum.photos/seed/${n.actor_id}/100/100`)} 
                     alt="Actor"
                     className="w-14 h-14 rounded-[1.5rem] object-cover border-2 border-white shadow-md group-hover:scale-105 transition-transform"
                     referrerPolicy="no-referrer"
@@ -91,7 +93,7 @@ export default function NotificationsView({ userId, onBack }: NotificationsViewP
               <div className="flex-1 min-w-0 flex flex-col justify-center">
                 <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1 mb-2">
                   <h4 className="text-sm font-bold text-brand-ink">
-                    {n.actor?.full_name || 'Un vecino'} <span className="font-normal text-slate-500">{getMessage(n)}</span>
+                    {n.type === 'system' ? 'Enlace Iztacala' : (n.actor?.full_name || 'Un vecino')} <span className="font-normal text-slate-500">{getMessage(n)}</span>
                   </h4>
                   <span className="text-[10px] text-brand-muted uppercase tracking-widest font-bold shrink-0">
                     {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: es })}
@@ -117,12 +119,16 @@ export default function NotificationsView({ userId, onBack }: NotificationsViewP
           ))}
         </div>
       ) : (
-        <div className="text-center py-32 bg-white rounded-[3rem] border border-slate-100 shadow-sm">
-          <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Bell size={40} className="text-slate-200" />
+        <div className="text-center py-32 bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden relative">
+          <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-slate-100 to-transparent" />
+          <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-8 relative">
+            <div className="absolute inset-0 bg-slate-100/50 rounded-full animate-ping" />
+            <Bell size={40} className="text-slate-300 relative z-10" />
           </div>
-          <h3 className="text-lg font-serif italic text-brand-ink mb-2">Bandeja impecable</h3>
-          <p className="text-xs text-brand-muted uppercase font-bold tracking-widest">No hay avisos recientes en tu zona</p>
+          <h3 className="text-xl font-serif italic text-brand-ink mb-3 uppercase tracking-tight">Zona en calma</h3>
+          <p className="text-[10px] text-brand-muted uppercase font-black tracking-[0.2em] max-w-[200px] mx-auto leading-relaxed">
+            Parece que no hay avisos nuevos por ahora. Todo tranquilo en el vecindario.
+          </p>
         </div>
       )}
     </div>
