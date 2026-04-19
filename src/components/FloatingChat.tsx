@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageSquare, X, Minimize2, Maximize2, Send, Loader2, Circle } from 'lucide-react';
+import { MessageSquare, X, Minimize2, Maximize2, Send, Loader2, Circle, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from '../lib/supabase';
 import { useChat } from '../lib/supabase-chat';
+import { useFriendships } from '../lib/supabase-friendships';
 import type { Profile, Message } from '../types';
 
 interface FloatingChatProps {
@@ -19,6 +20,7 @@ export default function FloatingChat({ currentUserId }: FloatingChatProps) {
   const [lastPopup, setLastPopup] = useState<{ actor: Profile; content: string } | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { friends } = useFriendships(currentUserId);
   const { messages, isTyping, sendMessage, sendTypingNotification } = useChat(currentUserId, selectedFriend?.id || null);
 
   // Solicitar permiso para notificaciones nativas
@@ -119,7 +121,7 @@ export default function FloatingChat({ currentUserId }: FloatingChatProps) {
 
       {/* 2. Ventana de Chat Flotante */}
       <AnimatePresence>
-        {isOpen && !isMinimized && selectedFriend && (
+        {isOpen && !isMinimized && (
           <motion.div 
             initial={{ opacity: 0, y: 50, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -127,17 +129,28 @@ export default function FloatingChat({ currentUserId }: FloatingChatProps) {
             className="pointer-events-auto w-80 h-[450px] bg-white rounded-[2.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.15)] border border-slate-100 flex flex-col overflow-hidden"
           >
             {/* Header */}
-            <header className="p-4 bg-brand-ink text-white flex items-center justify-between">
+            <header className="p-4 bg-brand-ink text-white flex items-center justify-between shrink-0">
               <div className="flex items-center gap-3">
-                <img src={selectedFriend.avatar_url || `https://picsum.photos/seed/${selectedFriend.id}/100/100`} className="w-8 h-8 rounded-full object-cover ring-2 ring-white/20" referrerPolicy="no-referrer" />
-                <div>
-                  <h4 className="text-[11px] font-bold tracking-tight">{selectedFriend.full_name}</h4>
-                  <p className="text-[9px] text-emerald-400 font-bold uppercase tracking-widest">
-                    {isTyping ? 'Escribiendo...' : 'En línea'}
-                  </p>
-                </div>
+                {selectedFriend ? (
+                  <>
+                    <img src={selectedFriend.avatar_url || `https://picsum.photos/seed/${selectedFriend.id}/100/100`} className="w-8 h-8 rounded-full object-cover ring-2 ring-white/20" referrerPolicy="no-referrer" />
+                    <div>
+                      <h4 className="text-[11px] font-bold tracking-tight">{selectedFriend.full_name}</h4>
+                      <p className="text-[9px] text-emerald-400 font-bold uppercase tracking-widest">
+                        {isTyping ? 'Escribiendo...' : 'En línea'}
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <h4 className="text-[11px] font-bold tracking-widest uppercase">Mensajes Privados</h4>
+                )}
               </div>
               <div className="flex items-center gap-1">
+                {selectedFriend && (
+                  <button onClick={() => setSelectedFriend(null)} className="p-1.5 hover:bg-white/10 rounded-lg transition-colors mr-1">
+                    <ArrowLeft size={14} />
+                  </button>
+                )}
                 <button onClick={() => setIsMinimized(true)} className="p-1.5 hover:bg-white/10 rounded-lg transition-colors">
                   <Minimize2 size={14} />
                 </button>
@@ -147,42 +160,78 @@ export default function FloatingChat({ currentUserId }: FloatingChatProps) {
               </div>
             </header>
 
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/30">
-              {messages.map((msg) => (
-                <div key={msg.id} className={`flex ${msg.sender_id === currentUserId ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] p-3 rounded-2xl text-xs leading-relaxed shadow-sm ${
-                    msg.sender_id === currentUserId 
-                    ? 'bg-brand-primary text-white rounded-tr-none' 
-                    : 'bg-white text-brand-ink border border-slate-100 rounded-tl-none font-serif italic'
-                  }`}>
-                    {msg.content}
-                  </div>
+            {selectedFriend ? (
+              <>
+                {/* Messages */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/30">
+                  {messages.map((msg) => (
+                    <div key={msg.id} className={`flex ${msg.sender_id === currentUserId ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[85%] p-3 rounded-2xl text-xs leading-relaxed shadow-sm ${
+                        msg.sender_id === currentUserId 
+                        ? 'bg-brand-primary text-white rounded-tr-none' 
+                        : 'bg-white text-brand-ink border border-slate-100 rounded-tl-none font-serif italic'
+                      }`}>
+                        {msg.content}
+                      </div>
+                    </div>
+                  ))}
+                  <div ref={messagesEndRef} />
                 </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
 
-            {/* Input */}
-            <form onSubmit={handleSendMessage} className="p-4 bg-white border-t border-slate-50 flex items-center gap-2">
-              <input 
-                type="text" 
-                value={newMessage}
-                onChange={(e) => {
-                  setNewMessage(e.target.value);
-                  sendTypingNotification(e.target.value.length > 0);
-                }}
-                placeholder="Escribe..."
-                className="flex-1 bg-slate-50 px-4 py-2 rounded-xl text-xs outline-none focus:ring-1 focus:ring-brand-primary font-serif italic"
-              />
-              <button 
-                type="submit" 
-                disabled={!newMessage.trim()}
-                className="w-10 h-10 bg-brand-ink text-white rounded-xl flex items-center justify-center hover:bg-brand-primary transition-all active:scale-95 disabled:opacity-30 shadow-md group"
-              >
-                <Send size={14} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-              </button>
-            </form>
+                {/* Input */}
+                <form onSubmit={handleSendMessage} className="p-4 bg-white border-t border-slate-50 flex items-center gap-2 mt-auto">
+                  <input 
+                    type="text" 
+                    value={newMessage}
+                    onChange={(e) => {
+                      setNewMessage(e.target.value);
+                      sendTypingNotification(e.target.value.length > 0);
+                    }}
+                    placeholder="Escribe..."
+                    className="flex-1 bg-slate-50 px-4 py-2 rounded-xl text-xs outline-none focus:ring-1 focus:ring-brand-primary font-serif italic"
+                  />
+                  <button 
+                    type="submit" 
+                    disabled={!newMessage.trim()}
+                    className="w-10 h-10 bg-brand-ink text-white rounded-xl flex items-center justify-center hover:bg-brand-primary transition-all active:scale-95 disabled:opacity-30 shadow-md group"
+                  >
+                    <Send size={14} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                  </button>
+                </form>
+              </>
+            ) : (
+              /* Conversation List */
+              <div className="flex-1 overflow-y-auto bg-slate-50/30 scrollbar-hide">
+                <div className="p-4 border-b border-slate-100 bg-white sticky top-0 z-10">
+                  <h5 className="text-[9px] font-bold uppercase tracking-widest text-brand-muted">Tus Conexiones</h5>
+                </div>
+                <div className="p-2 space-y-1">
+                  {friends.length > 0 ? (
+                    friends.map((f) => (
+                      <button 
+                        key={f.id}
+                        onClick={() => openConversation(f.friend!)}
+                        className="w-full p-3 flex items-center gap-3 hover:bg-white rounded-2xl transition-all group"
+                      >
+                        <img 
+                          src={f.friend?.avatar_url || `https://picsum.photos/seed/${f.friend_id}/100/100`} 
+                          className="w-10 h-10 rounded-full object-cover grayscale group-hover:grayscale-0 transition-all ring-2 ring-transparent group-hover:ring-brand-primary/20" 
+                          referrerPolicy="no-referrer" 
+                        />
+                        <div className="text-left min-w-0">
+                          <p className="text-xs font-bold text-brand-ink truncate">{f.friend?.full_name}</p>
+                          <p className="text-[10px] text-brand-muted truncate">@{f.friend?.username}</p>
+                        </div>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="p-12 text-center text-slate-300">
+                      <p className="text-xs font-serif italic">Conecta con tus vecinos para iniciar chats.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

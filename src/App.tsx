@@ -100,10 +100,40 @@ const MOCK_INCIDENTS: Incident[] = [
   }
 ];
 
+import { Toaster, toast } from 'react-hot-toast';
+
 export default function App() {
   const [activeTab, setActiveTab] = useState(() => {
     return localStorage.getItem('enlace_active_tab') || 'Comunidad';
   });
+
+  useEffect(() => {
+    const handleNewNotification = (e: any) => {
+      const notif = e.detail;
+      toast(() => (
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-brand-primary/10 rounded-full flex items-center justify-center text-brand-primary">
+            <Bell size={18} />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-brand-ink">Aviso Nuevo</p>
+            <p className="text-[10px] text-brand-muted">{notif.content || 'Tienes una nueva actualización'}</p>
+          </div>
+        </div>
+      ), {
+        position: 'top-center',
+        duration: 4000,
+        style: {
+          borderRadius: '20px',
+          background: '#fff',
+          color: '#333',
+        },
+      });
+    };
+
+    window.addEventListener('new_notification', handleNewNotification);
+    return () => window.removeEventListener('new_notification', handleNewNotification);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('enlace_active_tab', activeTab);
@@ -540,6 +570,7 @@ export default function App() {
         type={modalType}
       />
 
+      <Toaster />
       <FloatingChat currentUserId={user.id} />
     </div>
   );

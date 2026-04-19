@@ -51,11 +51,18 @@ export function useNotifications(userId: string) {
     const channel = supabase
       .channel(`notifications:${userId}:${Math.random().toString(36).substring(7)}`)
       .on('postgres_changes', { 
-        event: '*', 
+        event: 'INSERT', 
         schema: 'public', 
         table: 'notifications',
         filter: `user_id=eq.${userId}`
-      }, fetchNotifications)
+      }, (payload) => {
+        // Al recibir una nueva notificación, refrescamos la lista
+        fetchNotifications();
+        
+        // Opcionalmente podemos disparar un evento custom para Toasts
+        const event = new CustomEvent('new_notification', { detail: payload.new });
+        window.dispatchEvent(event);
+      })
       .subscribe();
 
     return () => {
