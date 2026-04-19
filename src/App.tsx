@@ -111,23 +111,31 @@ export default function App() {
     const handleNewNotification = (e: any) => {
       const notif = e.detail;
       toast(() => (
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-brand-primary/10 rounded-full flex items-center justify-center text-brand-primary">
-            <Bell size={18} />
-          </div>
-          <div>
-            <p className="text-xs font-bold text-brand-ink">Aviso Nuevo</p>
-            <p className="text-[10px] text-brand-muted">{notif.content || 'Tienes una nueva actualización'}</p>
+        <div className="flex items-center gap-4">
+          <img 
+            src={notif.actor?.avatar_url || `https://picsum.photos/seed/${notif.actor_id}/100/100`} 
+            className="w-10 h-10 rounded-full object-cover border-2 border-brand-primary"
+            referrerPolicy="no-referrer"
+          />
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] font-bold text-brand-ink">
+              {notif.actor?.full_name || 'Nuevo Aviso'}
+            </p>
+            <p className="text-[10px] text-brand-muted line-clamp-1 italic">
+              {notif.content || 'Tienes una nueva actualización'}
+            </p>
           </div>
         </div>
       ), {
         position: 'top-center',
-        duration: 4000,
+        duration: 5000,
         style: {
-          borderRadius: '20px',
+          borderRadius: '24px',
+          padding: '12px 20px',
           background: '#fff',
-          color: '#333',
-        },
+          boxShadow: '0 20px 40px -10px rgba(0,0,0,0.15)',
+          maxWidth: '350px'
+        }
       });
     };
 

@@ -23,6 +23,45 @@ export default function FloatingChat({ currentUserId }: FloatingChatProps) {
   const { friends } = useFriendships(currentUserId);
   const { messages, isTyping, sendMessage, sendTypingNotification } = useChat(currentUserId, selectedFriend?.id || null);
 
+  // Cargar lista de conversaciones (basada en mensajes recientes)
+  useEffect(() => {
+    const fetchConversations = async () => {
+      if (!currentUserId) return;
+      
+      // Obtenemos IDs únicos de personas con las que hayamos intercambiado mensajes
+      const { data, error } = await supabase
+        .from('messages')
+        .select('sender_id, recipient_id')
+        .or(`sender_id.eq.${currentUserId},recipient_id.eq.${currentUserId}`)
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        const partnerIds = Array.from(new Set(data.flatMap(m => 
+          m.sender_id === currentUserId ? [m.recipient_id] : [m.sender_id]
+        )));
+
+        if (partnerIds.length > 0) {
+          const { data: profiles } = await supabase
+            .from('profiles')
+            .select('*')
+            .in('id', partnerIds);
+          
+          if (profiles) setConversations(profiles);
+        }
+      }
+    };
+
+    fetchConversations();
+    
+    // Suscribirse a mensajes nuevos para actualizar la lista de conversaciones
+    const channel = supabase
+      .channel(`convos:${currentUserId}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, fetchConversations)
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [currentUserId]);
+
   // Solicitar permiso para notificaciones nativas
   useEffect(() => {
     if ('Notification' in window && Notification.permission === 'default') {
@@ -202,31 +241,36 @@ export default function FloatingChat({ currentUserId }: FloatingChatProps) {
             ) : (
               /* Conversation List */
               <div className="flex-1 overflow-y-auto bg-slate-50/30 scrollbar-hide">
-                <div className="p-4 border-b border-slate-100 bg-white sticky top-0 z-10">
-                  <h5 className="text-[9px] font-bold uppercase tracking-widest text-brand-muted">Tus Conexiones</h5>
+                <div className="p-4 border-b border-slate-100 bg-white sticky top-0 z-10 flex justify-between items-center">
+                  <h5 className="text-[9px] font-bold uppercase tracking-widest text-brand-muted">Mensajes Recientes</h5>
                 </div>
                 <div className="p-2 space-y-1">
-                  {friends.length > 0 ? (
-                    friends.map((f) => (
+                  {conversations.length > 0 ? (
+                    conversations.map((c) => (
                       <button 
-                        key={f.id}
-                        onClick={() => openConversation(f.friend!)}
+                        key={c.id}
+                        onClick={() => openConversation(c)}
                         className="w-full p-3 flex items-center gap-3 hover:bg-white rounded-2xl transition-all group"
                       >
-                        <img 
-                          src={f.friend?.avatar_url || `https://picsum.photos/seed/${f.friend_id}/100/100`} 
-                          className="w-10 h-10 rounded-full object-cover grayscale group-hover:grayscale-0 transition-all ring-2 ring-transparent group-hover:ring-brand-primary/20" 
-                          referrerPolicy="no-referrer" 
-                        />
+                        <div className="relative">
+                          <img 
+                            src={c.avatar_url || `https://picsum.photos/seed/${c.id}/100/100`} 
+                            className="w-10 h-10 rounded-full object-cover ring-2 ring-transparent group-hover:ring-brand-primary/20" 
+                            referrerPolicy="no-referrer" 
+                          />
+                          <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full" />
+                        </div>
                         <div className="text-left min-w-0">
-                          <p className="text-xs font-bold text-brand-ink truncate">{f.friend?.full_name}</p>
-                          <p className="text-[10px] text-brand-muted truncate">@{f.friend?.username}</p>
+                          <p className="text-xs font-bold text-brand-ink truncate">{c.full_name}</p>
+                          <p className="text-[10px] text-brand-muted truncate">@{c.username}</p>
                         </div>
                       </button>
                     ))
                   ) : (
                     <div className="p-12 text-center text-slate-300">
-                      <p className="text-xs font-serif italic">Conecta con tus vecinos para iniciar chats.</p>
+                      <MessageSquare size={32} className="mx-auto mb-3 opacity-20" />
+                      <p className="text-xs font-serif italic">No tienes conversaciones activas aún.</p>
+                      <p className="text-[10px] mt-2 text-brand-muted font-sans uppercase tracking-tighter">Busca vecinos en el mapa para conectar</p>
                     </div>
                   )}
                 </div>

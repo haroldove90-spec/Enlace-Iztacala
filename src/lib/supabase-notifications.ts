@@ -55,12 +55,20 @@ export function useNotifications(userId: string) {
         schema: 'public', 
         table: 'notifications',
         filter: `user_id=eq.${userId}`
-      }, (payload) => {
-        // Al recibir una nueva notificación, refrescamos la lista
+      }, async (payload) => {
+        // Obtenemos los detalles del actor para la notificación inmediata (Toast)
+        const { data: actor } = await supabase
+          .from('profiles')
+          .select('full_name, avatar_url')
+          .eq('id', payload.new.actor_id)
+          .single();
+
         fetchNotifications();
         
-        // Opcionalmente podemos disparar un evento custom para Toasts
-        const event = new CustomEvent('new_notification', { detail: payload.new });
+        // Despachamos el evento con los datos completos del actor
+        const event = new CustomEvent('new_notification', { 
+          detail: { ...payload.new, actor } 
+        });
         window.dispatchEvent(event);
       })
       .subscribe();
