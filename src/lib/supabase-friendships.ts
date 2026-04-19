@@ -14,30 +14,38 @@ export function useFriendships(currentUserId: string) {
   const fetchFriendships = async () => {
     if (!currentUserId) return;
 
-    // Obtener amistades aceptadas y pendientes
-    const { data, error } = await supabase
-      .from('friendships')
-      .select(`
-        *,
-        user_info:profiles!friendships_user_id_fkey(id, username, full_name, avatar_url),
-        friend_info:profiles!friendships_friend_id_fkey(id, username, full_name, avatar_url)
-      `)
-      .or(`user_id.eq.${currentUserId},friend_id.eq.${currentUserId}`);
+    try {
+      // Obtener amistades aceptadas y pendientes
+      // Simplificamos la consulta para evitar problemas con nombres de llaves foráneas específicos
+      const { data, error } = await supabase
+        .from('friendships')
+        .select(`
+          *,
+          user_profile:profiles!user_id(id, username, full_name, avatar_url),
+          friend_profile:profiles!friend_id(id, username, full_name, avatar_url)
+        `)
+        .or(`user_id.eq.${currentUserId},friend_id.eq.${currentUserId}`);
 
-    if (!error && data) {
-      const formatted = data.map((f: any) => {
-        const isRequester = f.user_id === currentUserId;
-        return {
-          ...f,
-          friend: isRequester ? f.friend_info : f.user_info
-        };
-      });
+      if (error) {
+        console.error('Error fetching friendships:', error);
+      } else if (data) {
+        const formatted = data.map((f: any) => {
+          const isRequester = f.user_id === currentUserId;
+          return {
+            ...f,
+            friend: isRequester ? f.friend_profile : f.user_profile
+          };
+        });
 
-      setFriends(formatted.filter(f => f.status === 'Accepted'));
-      setReceivedRequests(formatted.filter(f => f.status === 'Pending' && f.friend_id === currentUserId));
-      setSentRequests(formatted.filter(f => f.status === 'Pending' && f.user_id === currentUserId));
+        setFriends(formatted.filter(f => f.status === 'Accepted'));
+        setReceivedRequests(formatted.filter(f => f.status === 'Pending' && f.friend_id === currentUserId));
+        setSentRequests(formatted.filter(f => f.status === 'Pending' && f.user_id === currentUserId));
+      }
+    } catch (e) {
+      console.error('Unexpected error in useFriendships:', e);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {

@@ -25,7 +25,7 @@ export default function CommunityView({ currentUserId, onViewProfile }: Communit
 
   useEffect(() => {
     fetchProfiles();
-  }, []);
+  }, [currentUserId]);
 
   const fetchProfiles = async () => {
     setLoading(true);

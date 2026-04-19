@@ -21,7 +21,7 @@ export default function ConnectButton({ currentUserId, targetUserId }: ConnectBu
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [showToast, setShowToast] = useState(false);
 
-  if (currentUserId === targetUserId) return null;
+  if (!currentUserId || currentUserId === targetUserId) return null;
 
   // Encontrar estado de amistad
   // 1. Amigos aceptados
@@ -42,10 +42,12 @@ export default function ConnectButton({ currentUserId, targetUserId }: ConnectBu
     setIsActionLoading(true);
     try {
       await sendRequest(targetUserId);
+      toast.success('¡Solicitud enviada!');
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error connecting:', error);
+      toast.error(error.message || 'Error al enviar solicitud');
     } finally {
       setIsActionLoading(false);
     }
@@ -53,14 +55,14 @@ export default function ConnectButton({ currentUserId, targetUserId }: ConnectBu
 
   const handleAccept = async () => {
     if (!received) {
-      toast.error('No se encontró la solicitud original.');
+      toast.error('No se encontró la solicitud.');
       return;
     }
     
     setIsActionLoading(true);
     try {
       await updateRequestStatus(received.id, 'Accepted');
-      toast.success('¡Ahora son conexiones!');
+      toast.success('¡Conexión aceptada!');
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     } catch (error: any) {
