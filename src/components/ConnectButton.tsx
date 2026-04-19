@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { UserPlus, UserCheck, Clock, Loader2 } from 'lucide-react';
 import { useFriendships } from '../lib/supabase-friendships';
 import { motion, AnimatePresence } from 'motion/react';
+import { toast } from 'react-hot-toast';
 
 interface ConnectButtonProps {
   currentUserId: string;
@@ -51,14 +52,20 @@ export default function ConnectButton({ currentUserId, targetUserId }: ConnectBu
   };
 
   const handleAccept = async () => {
-    if (!received) return;
+    if (!received) {
+      toast.error('No se encontró la solicitud original.');
+      return;
+    }
+    
     setIsActionLoading(true);
     try {
       await updateRequestStatus(received.id, 'Accepted');
+      toast.success('¡Ahora son conexiones!');
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error accepting friendship:', error);
+      toast.error(error.message || 'Error al aceptar la conexión');
     } finally {
       setIsActionLoading(false);
     }
