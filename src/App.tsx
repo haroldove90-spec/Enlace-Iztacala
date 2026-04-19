@@ -106,59 +106,77 @@ const MOCK_INCIDENTS: Incident[] = [
 import { Toaster, toast } from 'react-hot-toast';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState(() => {
-    return localStorage.getItem('enlace_active_tab') || 'Comunidad';
-  });
-
-  useEffect(() => {
-    const handleNewNotification = (e: any) => {
-      const notif = e.detail;
-      toast(() => (
-        <div className="flex items-center gap-4">
-          <img 
-            src={notif.actor?.avatar_url || `https://picsum.photos/seed/${notif.actor_id}/100/100`} 
-            className="w-10 h-10 rounded-full object-cover border-2 border-brand-primary"
-            referrerPolicy="no-referrer"
-          />
-          <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-bold text-brand-ink">
-              {notif.actor?.full_name || 'Nuevo Aviso'}
-            </p>
-            <p className="text-[10px] text-brand-muted line-clamp-1 italic">
-              {notif.content || 'Tienes una nueva actualización'}
-            </p>
-          </div>
-        </div>
-      ), {
-        position: 'top-center',
-        duration: 5000,
-        style: {
-          borderRadius: '24px',
-          padding: '12px 20px',
-          background: '#fff',
-          boxShadow: '0 20px 40px -10px rgba(0,0,0,0.15)',
-          maxWidth: '350px'
-        }
-      });
-    };
-
-    window.addEventListener('new_notification', handleNewNotification);
-    return () => window.removeEventListener('new_notification', handleNewNotification);
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('enlace_active_tab', activeTab);
-  }, [activeTab]);
-
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [selectedChatUserId, setSelectedChatUserId] = useState<string | null>(null);
 
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('enlace_active_tab') || 'Comunidad';
+  });
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<'post' | 'incident'>('post');
+
+  useEffect(() => {
+    localStorage.setItem('enlace_active_tab', activeTab);
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    // Listener global único para notificaciones en tiempo real (Toasts)
+    const channelName = `global_notifs_channel_${user.id}`;
+    const channel = supabase
+      .channel(channelName)
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'notifications',
+        filter: `user_id=eq.${user.id}`
+      }, async (payload) => {
+        // Obtenemos datos del actor para el Toast
+        const { data: actor } = await supabase
+          .from('profiles')
+          .select('full_name, avatar_url')
+          .eq('id', payload.new.actor_id)
+          .single();
+
+        toast.custom((t) => (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-sm w-full bg-white shadow-[0_30px_60px_-15px_rgba(225,29,72,0.2)] rounded-[2.5rem] pointer-events-auto flex ring-1 ring-rose-500/10 border border-slate-100 p-4 gap-4 items-center`}
+          >
+            <div className="relative shrink-0">
+              <img 
+                src={actor?.avatar_url || `https://picsum.photos/seed/${payload.new.actor_id}/80/80`} 
+                className="h-12 w-12 rounded-[1.2rem] object-cover shadow-sm"
+                referrerPolicy="no-referrer"
+              />
+              <div className="absolute -top-1 -right-1 w-5 h-5 bg-rose-600 rounded-full border-2 border-white flex items-center justify-center shadow-lg">
+                <Bell size={10} className="text-white fill-white" />
+              </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[9px] font-black text-rose-600 uppercase tracking-[0.2em] mb-0.5">Aviso Importante</p>
+              <p className="text-[14px] font-bold text-brand-ink truncate leading-tight mb-0.5">{actor?.full_name || 'Alguien'}</p>
+              <p className="text-[11px] text-brand-muted truncate italic leading-tight">
+                {payload.new.content || 'Tienes una nueva actualización'}
+              </p>
+            </div>
+          </motion.div>
+        ), { duration: 5000, position: 'top-center' });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
 
   const { posts, incidents, loading: dbLoading } = useCommunityData(user?.id);
   const { unreadCount: globalUnreadCount } = useNotifications(user?.id || '');

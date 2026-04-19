@@ -32,7 +32,7 @@ export function useNotifications(userId: string) {
       .from('notifications')
       .select(`
         *,
-        actor:profiles!actor_id(id, username, full_name, avatar_url)
+        actor:profiles(id, username, full_name, avatar_url)
       `)
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
@@ -48,28 +48,18 @@ export function useNotifications(userId: string) {
   useEffect(() => {
     fetchNotifications();
 
+    // Singleton Channel for notifications to avoid duplicate toasts
+    const channelName = `notifications:${userId}`;
     const channel = supabase
-      .channel(`notifications:${userId}:${Math.random().toString(36).substring(7)}`)
+      .channel(channelName)
       .on('postgres_changes', { 
         event: 'INSERT', 
         schema: 'public', 
         table: 'notifications',
         filter: `user_id=eq.${userId}`
       }, async (payload) => {
-        // Obtenemos los detalles del actor para la notificación inmediata (Toast)
-        const { data: actor } = await supabase
-          .from('profiles')
-          .select('full_name, avatar_url')
-          .eq('id', payload.new.actor_id)
-          .single();
-
+        // Solo refrescamos el estado local
         fetchNotifications();
-        
-        // Despachamos el evento con los datos completos del actor
-        const event = new CustomEvent('new_notification', { 
-          detail: { ...payload.new, actor } 
-        });
-        window.dispatchEvent(event);
       })
       .subscribe();
 
