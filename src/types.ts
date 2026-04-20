@@ -101,3 +101,13 @@ export interface Payment {
   created_at: string;
   expires_at?: string;
 }
+
+export interface SiteBanner {
+  id: string;
+  image_url: string;
+  link_url?: string;
+  title?: string;
+  is_active: boolean;
+  position: 'header' | 'sidebar';
+  created_at: string;
+}

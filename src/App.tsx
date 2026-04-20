@@ -41,6 +41,9 @@ import PostInteractions from './components/PostInteractions';
 import NotificationBell from './components/NotificationBell';
 import NotificationsView from './components/NotificationsView';
 import FavoritesView from './components/FavoritesView';
+import HeaderBanner from './components/HeaderBanner';
+import RecentUsersSlider from './components/RecentUsersSlider';
+import QuickPostForm from './components/QuickPostForm';
 import FloatingChat from './components/FloatingChat';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import { useNotifications } from './lib/supabase-notifications';
@@ -529,6 +532,8 @@ export default function App() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
             >
+              <HeaderBanner />
+              
               <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 md:mb-10 pb-5 border-b border-slate-100">
                 <div className="flex items-end justify-between w-full h-full">
                   <h2 className="text-xl md:text-3xl tracking-tight leading-none">Novedades</h2>
@@ -546,6 +551,13 @@ export default function App() {
                   </div>
                 </div>
               </header>
+
+              <RecentUsersSlider />
+              
+              <QuickPostForm 
+                onOpenModal={() => setIsPostModalOpen(true)} 
+                userProfile={profile || undefined} 
+              />
 
               <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-8 xl:gap-12">
                 {/* Main Feed Section */}

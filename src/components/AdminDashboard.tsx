@@ -12,10 +12,14 @@ import {
   Loader2,
   MessageSquare,
   Heart,
-  Megaphone
+  Megaphone,
+  Plus,
+  Image as ImageIcon
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import type { Profile, Business, Payment } from '../types';
+import type { Profile, Business, Payment, SiteBanner } from '../types';
+import { uploadFile } from '../lib/supabase-hooks';
+import { toast } from 'react-hot-toast';
 
 export default function AdminDashboard() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -23,6 +27,10 @@ export default function AdminDashboard() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [banners, setBanners] = useState<SiteBanner[]>([]);
+  const [isBannerModalOpen, setIsBannerModalOpen] = useState(false);
+  const [newBanner, setNewBanner] = useState({ title: '', link_url: '', file: null as File | null });
+  const [uploadingBanner, setUploadingBanner] = useState(false);
   const [stats, setStats] = useState({
     posts: 0,
     likes: 0,
@@ -39,6 +47,7 @@ export default function AdminDashboard() {
     const { data: pData } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
     const { data: bData } = await supabase.from('business_directory').select('*, owner:profiles(*)');
     const { data: payData } = await supabase.from('payments').select('*');
+    const { data: bDataBanners } = await supabase.from('site_banners').select('*').order('created_at', { ascending: false });
     
     // Métricas de interacción
     const { count: postCount } = await supabase.from('posts').select('*', { count: 'exact', head: true });
@@ -49,6 +58,7 @@ export default function AdminDashboard() {
     if (pData) setProfiles(pData);
     if (bData) setBusinesses(bData);
     if (payData) setPayments(payData);
+    if (bDataBanners) setBanners(bDataBanners);
     setStats({
       posts: postCount || 0,
       likes: likeCount || 0,
@@ -84,6 +94,56 @@ export default function AdminDashboard() {
     p.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
     p.username?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleCreateBanner = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newBanner.file) {
+      toast.error('Por favor selecciona una imagen para el banner');
+      return;
+    }
+
+    setUploadingBanner(true);
+    const loadingToast = toast.loading('Subiendo banner publicitario...');
+
+    try {
+      const publicUrl = await uploadFile('banners', newBanner.file, 'admin');
+      
+      const { error } = await supabase
+        .from('site_banners')
+        .insert([{
+          title: newBanner.title || 'Anuncio',
+          link_url: newBanner.link_url,
+          image_url: publicUrl,
+          position: 'header'
+        }]);
+
+      if (error) throw error;
+
+      toast.success('Banner publicado exitosamente', { id: loadingToast });
+      setIsBannerModalOpen(false);
+      setNewBanner({ title: '', link_url: '', file: null });
+      fetchData();
+    } catch (err: any) {
+      toast.error('Error al subir banner: ' + err.message, { id: loadingToast });
+    } finally {
+      setUploadingBanner(false);
+    }
+  };
+
+  const toggleBannerStatus = async (bannerId: string, currentStatus: boolean) => {
+    const { error } = await supabase
+      .from('site_banners')
+      .update({ is_active: !currentStatus })
+      .eq('id', bannerId);
+    
+    if (!error) fetchData();
+  };
+
+  const deleteBanner = async (bannerId: string) => {
+    if (!confirm('¿Estás seguro de eliminar este banner?')) return;
+    const { error } = await supabase.from('site_banners').delete().eq('id', bannerId);
+    if (!error) fetchData();
+  };
 
   if (loading) return <div className="h-96 flex items-center justify-center"><Loader2 className="animate-spin text-brand-primary" /></div>;
 
@@ -132,6 +192,122 @@ export default function AdminDashboard() {
           </div>
         </div>
       </section>
+
+      {/* Corporate Banners Management */}
+      <section className="bg-white rounded-[2.5rem] p-8 border border-slate-100">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h3 className="text-xl font-serif">Banners de Cabecera (Home)</h3>
+            <p className="text-[10px] text-brand-muted uppercase font-bold tracking-widest mt-1">Gestión de publicidad global</p>
+          </div>
+          <button 
+            onClick={() => setIsBannerModalOpen(true)}
+            className="flex items-center gap-2 px-6 py-3 bg-brand-primary text-white text-[10px] font-bold uppercase tracking-widest rounded-full hover:shadow-lg transition-all active:scale-95"
+          >
+            <Plus size={14} /> Nuevo Banner
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {banners.map(banner => (
+            <div key={banner.id} className="editorial-card !p-4 flex flex-col gap-4 group">
+              <div className="aspect-[21/9] rounded-2xl overflow-hidden relative">
+                <img src={banner.image_url} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                <div className={`absolute top-2 right-2 px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-tighter ${
+                  banner.is_active ? 'bg-emerald-500 text-white' : 'bg-slate-500 text-white'
+                }`}>
+                  {banner.is_active ? 'Activo' : 'Pausado'}
+                </div>
+              </div>
+              <div>
+                <h4 className="font-bold text-sm">{banner.title}</h4>
+                <p className="text-[10px] text-slate-400 truncate">{banner.link_url || 'Sin enlace'}</p>
+              </div>
+              <div className="flex gap-2 pt-2 border-t border-slate-50 mt-auto">
+                <button 
+                  onClick={() => toggleBannerStatus(banner.id, banner.is_active)}
+                  className={`flex-1 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-colors ${
+                    banner.is_active ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'
+                  }`}
+                >
+                  {banner.is_active ? 'Pausar' : 'Activar'}
+                </button>
+                <button 
+                  onClick={() => deleteBanner(banner.id)}
+                  className="p-2 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-100 transition-colors"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            </div>
+          ))}
+          {banners.length === 0 && (
+            <div className="col-span-full py-12 text-center border-2 border-dashed border-slate-100 rounded-[2.5rem]">
+              <p className="text-slate-300 font-serif italic">No hay banners configurados</p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Banner Creation Modal */}
+      {isBannerModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-brand-ink/40 backdrop-blur-sm">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-[3rem] p-10 w-full max-w-lg shadow-2xl"
+          >
+            <h3 className="text-2xl font-serif mb-6">Nuevo Banner Publicitario</h3>
+            <form onSubmit={handleCreateBanner} className="space-y-6">
+              <div>
+                <label className="text-[10px] font-black text-brand-muted uppercase tracking-widest mb-2 block">Imagen del Banner (Recomendado 21:9)</label>
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={(e) => setNewBanner({ ...newBanner, file: e.target.files?.[0] || null })}
+                  className="w-full text-xs"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-black text-brand-muted uppercase tracking-widest mb-2 block">Título (Opcional)</label>
+                <input 
+                  type="text" 
+                  placeholder="Ej: Gran Inauguración"
+                  value={newBanner.title}
+                  onChange={(e) => setNewBanner({ ...newBanner, title: e.target.value })}
+                  className="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm outline-none ring-1 ring-slate-100 focus:ring-brand-primary"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-black text-brand-muted uppercase tracking-widest mb-2 block">Link de Destino</label>
+                <input 
+                  type="url" 
+                  placeholder="https://..."
+                  value={newBanner.link_url}
+                  onChange={(e) => setNewBanner({ ...newBanner, link_url: e.target.value })}
+                  className="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm outline-none ring-1 ring-slate-100 focus:ring-brand-primary"
+                />
+              </div>
+              <div className="flex gap-4 pt-4">
+                <button 
+                  type="button"
+                  onClick={() => setIsBannerModalOpen(false)}
+                  className="flex-1 py-4 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-brand-ink transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit"
+                  disabled={uploadingBanner}
+                  className="flex-1 bg-brand-primary text-white py-4 rounded-full text-xs font-bold uppercase tracking-widest shadow-lg shadow-brand-primary/20 active:scale-95 transition-all disabled:opacity-50"
+                >
+                  {uploadingBanner ? 'Subiendo...' : 'Publicar Banner'}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
 
       <div className="grid lg:grid-cols-2 gap-12">
         {/* User Management */}

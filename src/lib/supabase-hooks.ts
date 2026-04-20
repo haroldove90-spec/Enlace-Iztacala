@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from './supabase';
-import type { Post, Incident, Comment, Like } from '../types';
+import type { Post, Incident, Comment, Like, SiteBanner, Profile } from '../types';
 
 /**
  * Hook centralizado para manejar los datos de la comunidad en tiempo real.
@@ -230,4 +230,63 @@ export async function uploadFile(bucket: string, file: File, userId: string) {
     .getPublicUrl(filePath);
 
   return publicUrl;
+}
+
+/**
+ * Hook para obtener banners publicitarios activos.
+ */
+export function useSiteBanners() {
+  const [banners, setBanners] = useState<SiteBanner[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBanners = async () => {
+      const { data, error } = await supabase
+        .from('site_banners')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (!error && data) setBanners(data);
+      setLoading(false);
+    };
+
+    fetchBanners();
+
+    const bannerSubscription = supabase
+      .channel('public:site_banners')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'site_banners' }, fetchBanners)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(bannerSubscription);
+    };
+  }, []);
+
+  return { banners, loading };
+}
+
+/**
+ * Hook para obtener los usuarios registrados recientemente.
+ */
+export function useRecentUsers() {
+  const [users, setUsers] = useState<Profile[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRecentUsers = async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(12);
+
+      if (!error && data) setUsers(data);
+      setLoading(false);
+    };
+
+    fetchRecentUsers();
+  }, []);
+
+  return { users, loading };
 }
