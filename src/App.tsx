@@ -289,29 +289,10 @@ export default function App() {
                   onClick={() => { setActiveTab('Comunidad'); setIsSidebarOpen(false); }} 
                 />
                 <SidebarItem 
-                  icon={<Shield size={18} />} 
-                  label="Seguridad" 
-                  active={activeTab === 'Seguridad'} 
-                  onClick={() => { setActiveTab('Seguridad'); setIsSidebarOpen(false); }} 
-                />
-                <SidebarItem 
                   icon={<Store size={18} />} 
-                  label="Comercio Local" 
-                  active={activeTab === 'Comercio Local'} 
-                  onClick={() => { setActiveTab('Comercio Local'); setIsSidebarOpen(false); }} 
-                />
-                <SidebarItem 
-                  icon={<Megaphone size={18} />} 
-                  label="Servicios Públicos" 
-                  active={activeTab === 'Servicios Públicos'} 
-                  onClick={() => { setActiveTab('Servicios Públicos'); setIsSidebarOpen(false); }} 
-                />
-                <SidebarItem 
-                  icon={<Bell size={18} />} 
-                  label="Avisos" 
-                  active={activeTab === 'Notificaciones'} 
-                  unreadCount={globalUnreadCount}
-                  onClick={() => { setActiveTab('Notificaciones'); setIsSidebarOpen(false); }} 
+                  label="Directorio Comercial" 
+                  active={activeTab === 'Directorio Comercial'} 
+                  onClick={() => { setActiveTab('Directorio Comercial'); setIsSidebarOpen(false); }} 
                 />
                 <SidebarItem 
                   icon={<Users size={18} />} 
@@ -458,7 +439,7 @@ export default function App() {
                 onViewProfile={(id) => { setSelectedProfileId(id); setActiveTab('Perfil Público'); }} 
               />
             </motion.div>
-          ) : activeTab === 'Comercio Local' ? (
+          ) : activeTab === 'Directorio Comercial' ? (
             <motion.div 
               key="comercio"
               initial={{ opacity: 0, x: 20 }}

@@ -83,7 +83,7 @@ export default function LocalCommerceView({ currentUserId, onViewBusiness, onIns
       <section>
         <div className="flex items-end justify-between mb-8">
           <div>
-            <h2 className="text-4xl brand-title leading-tight">Comercio Local</h2>
+            <h2 className="text-4xl brand-title leading-tight">Directorio Comercial</h2>
             <p className="brand-subtitle mt-2">Apoya a tus vecinos y descubre tesoros en Iztacala.</p>
           </div>
           <div className="hidden md:flex gap-2">
