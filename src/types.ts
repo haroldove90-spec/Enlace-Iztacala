@@ -51,6 +51,7 @@ export interface Post {
   likes_count?: number;
   comments_count?: number;
   has_liked?: boolean;
+  is_favorite?: boolean;
 }
 
 export interface Like {

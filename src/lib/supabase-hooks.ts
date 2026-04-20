@@ -19,7 +19,8 @@ export function useCommunityData(currentUserId?: string) {
           *,
           author:profiles(id, username, full_name, avatar_url, address_verified),
           likes(user_id),
-          comments(id)
+          comments(id),
+          is_favorite:favorites(user_id)
         `)
         .order('created_at', { ascending: false });
 
@@ -28,7 +29,8 @@ export function useCommunityData(currentUserId?: string) {
           ...post,
           likes_count: post.likes?.length || 0,
           comments_count: post.comments?.length || 0,
-          has_liked: post.likes?.some((l: any) => l.user_id === currentUserId)
+          has_liked: post.likes?.some((l: any) => l.user_id === currentUserId),
+          is_favorite: post.is_favorite?.some((f: any) => f.user_id === currentUserId)
         }));
         setPosts(formattedPosts);
       }
@@ -98,7 +100,8 @@ export function useUserPosts(userId: string, currentUserId?: string) {
           *,
           author:profiles(id, username, full_name, avatar_url, address_verified),
           likes(user_id),
-          comments(id)
+          comments(id),
+          is_favorite:favorites(user_id)
         `)
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
@@ -108,7 +111,8 @@ export function useUserPosts(userId: string, currentUserId?: string) {
           ...post,
           likes_count: post.likes?.length || 0,
           comments_count: post.comments?.length || 0,
-          has_liked: post.likes?.some((l: any) => l.user_id === currentUserId)
+          has_liked: post.likes?.some((l: any) => l.user_id === currentUserId),
+          is_favorite: post.is_favorite?.some((f: any) => f.user_id === currentUserId)
         }));
         setPosts(formattedPosts);
       }
@@ -166,6 +170,21 @@ export async function toggleLike(postId: string, userId: string, hasLiked: boole
   } else {
     const { error } = await supabase
       .from('likes')
+      .insert([{ post_id: postId, user_id: userId }]);
+    if (error) throw error;
+  }
+}
+
+export async function toggleFavorite(postId: string, userId: string, isFavorite: boolean) {
+  if (isFavorite) {
+    const { error } = await supabase
+      .from('favorites')
+      .delete()
+      .match({ post_id: postId, user_id: userId });
+    if (error) throw error;
+  } else {
+    const { error } = await supabase
+      .from('favorites')
       .insert([{ post_id: postId, user_id: userId }]);
     if (error) throw error;
   }

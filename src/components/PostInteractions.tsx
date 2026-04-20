@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Heart, MessageSquare, Share2, Send, Loader2, User } from 'lucide-react';
+import { Heart, MessageSquare, Share2, Send, Loader2, User, Bookmark, BookmarkCheck, Maximize2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { toggleLike, addComment, getComments } from '../lib/supabase-hooks';
+import { toggleLike, addComment, getComments, toggleFavorite } from '../lib/supabase-hooks';
 import type { Post, Comment } from '../types';
+import { toast } from 'react-hot-toast';
 
 interface PostInteractionsProps {
   post: Post;
@@ -15,12 +16,23 @@ export default function PostInteractions({ post, userId }: PostInteractionsProps
   const [newComment, setNewComment] = useState('');
   const [loadingComments, setLoadingComments] = useState(false);
   const [sendingComment, setSendingComment] = useState(false);
+  const [isFullImageOpen, setIsFullImageOpen] = useState(false);
 
   const handleLike = async () => {
     try {
       await toggleLike(post.id, userId, !!post.has_liked);
     } catch (error) {
       console.error('Error al dar like:', error);
+    }
+  };
+
+  const handleFavorite = async () => {
+    try {
+      await toggleFavorite(post.id, userId, !!post.is_favorite);
+      toast.success(post.is_favorite ? 'Eliminado de guardados' : 'Guardado en tu perfil');
+    } catch (error) {
+      console.error('Error al guardar:', error);
+      toast.error('Error al guardar publicación');
     }
   };
 
@@ -100,30 +112,77 @@ export default function PostInteractions({ post, userId }: PostInteractionsProps
           </button>
         </div>
 
-        <span className="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-          {post.author?.full_name || 'Vecino'}
-        </span>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={handleFavorite}
+            className={`flex items-center gap-2 text-xs font-medium transition-all group ${
+              post.is_favorite ? 'text-brand-primary' : 'text-slate-500 hover:text-brand-primary'
+            }`}
+            title={post.is_favorite ? "Quitar de guardados" : "Guardar publicación"}
+          >
+            {post.is_favorite ? <BookmarkCheck size={20} className="fill-current" /> : <Bookmark size={20} className="group-hover:scale-110 transition-transform" />}
+          </button>
+          <span className="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+            {post.author?.full_name || 'Vecino'}
+          </span>
+        </div>
       </div>
 
       {/* Media Preview (If exists) */}
       {post.image_url && (
-        <div className="mb-6 rounded-[1.5rem] overflow-hidden bg-slate-100 flex items-center justify-center min-h-[200px] border border-slate-200 shadow-inner">
+        <div 
+          className="mb-6 rounded-[1.5rem] overflow-hidden bg-slate-100 flex items-center justify-center min-h-[200px] border border-slate-200 shadow-inner group/media cursor-pointer relative"
+          onClick={() => setIsFullImageOpen(true)}
+        >
+          <div className="absolute inset-0 bg-black/0 group-hover/media:bg-black/5 transition-all flex items-center justify-center opacity-0 group-hover/media:opacity-100 z-10">
+            <div className="bg-white/80 p-3 rounded-full backdrop-blur-md shadow-xl">
+              <Maximize2 size={24} className="text-brand-ink" />
+            </div>
+          </div>
           {post.image_url.match(/\.(mp4|webm|ogg)$/) ? (
             <video 
               src={post.image_url} 
               controls 
-              className="w-full max-h-[400px] object-contain"
+              className="w-full max-h-[600px] object-contain"
             />
           ) : (
             <img 
               src={post.image_url} 
               alt="Post media" 
-              className="w-full max-h-[400px] object-contain"
+              className="w-full max-h-[600px] object-contain"
               referrerPolicy="no-referrer"
             />
           )}
         </div>
       )}
+
+      {/* Full Screen Image Modal */}
+      <AnimatePresence>
+        {isFullImageOpen && post.image_url && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] bg-black/95 flex flex-col p-4 md:p-10"
+            onClick={() => setIsFullImageOpen(false)}
+          >
+            <button 
+              className="absolute top-6 right-6 md:top-10 md:right-10 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all z-20"
+              onClick={() => setIsFullImageOpen(false)}
+            >
+              <X size={24} />
+            </button>
+            <div className="flex-1 flex items-center justify-center relative">
+              <img 
+                src={post.image_url} 
+                className="max-w-full max-h-full object-contain shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+                referrerPolicy="no-referrer"
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Comments Section */}
       <AnimatePresence>

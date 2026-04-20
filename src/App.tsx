@@ -39,6 +39,7 @@ import PublicProfileView from './components/PublicProfileView';
 import PostInteractions from './components/PostInteractions';
 import NotificationBell from './components/NotificationBell';
 import NotificationsView from './components/NotificationsView';
+import FavoritesView from './components/FavoritesView';
 import FloatingChat from './components/FloatingChat';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import { useNotifications } from './lib/supabase-notifications';
@@ -301,6 +302,12 @@ export default function App() {
                   onClick={() => { setActiveTab('Vecinos'); setIsSidebarOpen(false); }} 
                 />
                 <SidebarItem 
+                  icon={<Bookmark size={18} />} 
+                  label="Guardados" 
+                  active={activeTab === 'Guardados'} 
+                  onClick={() => { setActiveTab('Guardados'); setIsSidebarOpen(false); }} 
+                />
+                <SidebarItem 
                   icon={<MessageSquare size={18} />} 
                   label="Mensajes" 
                   active={activeTab === 'Mensajes'} 
@@ -504,6 +511,15 @@ export default function App() {
               exit={{ opacity: 0, y: -20 }}
             >
               <NotificationsView userId={user.id} onBack={() => setActiveTab('Comunidad')} />
+            </motion.div>
+          ) : activeTab === 'Guardados' ? (
+            <motion.div 
+              key="favorites-page"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <FavoritesView userId={user.id} onBack={() => setActiveTab('Comunidad')} />
             </motion.div>
           ) : (
             <motion.div 
