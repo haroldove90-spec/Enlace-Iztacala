@@ -19,7 +19,8 @@ import {
   Menu,
   X,
   Bell,
-  Download
+  Download,
+  Bookmark
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import type { Post, Incident, Category, Profile } from './types';
