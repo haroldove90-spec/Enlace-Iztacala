@@ -9,17 +9,20 @@ import {
   Loader2, 
   CheckCircle,
   ExternalLink,
-  Tag
+  Tag,
+  Upload
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { uploadFile } from '../lib/supabase-hooks';
 import type { Business, Payment } from '../types';
+import { toast } from 'react-hot-toast';
 
 export default function BusinessDashboard({ userId }: { userId: string }) {
   const [business, setBusiness] = useState<Business | null>(null);
   const [loading, setLoading] = useState(true);
   const [saveLoading, setSaveLoading] = useState(false);
   const [payLoading, setPayLoading] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
   // Form states
@@ -63,18 +66,25 @@ export default function BusinessDashboard({ userId }: { userId: string }) {
 
   const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setSaveLoading(true);
+      setUploadingBanner(true);
+      const loadingToast = toast.loading('Subiendo imagen...');
       try {
         const publicUrl = await uploadFile('banners', e.target.files[0], userId);
-        await supabase
+        
+        const { error } = await supabase
           .from('business_directory')
           .update({ banner_url: publicUrl })
           .eq('user_id', userId);
+
+        if (error) throw error;
+
         fetchBusiness();
+        toast.success('¡Banner actualizado!', { id: loadingToast });
       } catch (err) {
         console.error(err);
+        toast.error('Error al subir imagen. Verifica que el bucket "banners" exista en Supabase.', { id: loadingToast });
       } finally {
-        setSaveLoading(false);
+        setUploadingBanner(false);
       }
     }
   };
@@ -136,21 +146,35 @@ export default function BusinessDashboard({ userId }: { userId: string }) {
         {/* Banner & General Info */}
         <section className="space-y-10">
           <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-            <div className="relative h-56 bg-slate-100 group">
+            <div className="relative h-56 bg-slate-100 group overflow-hidden">
               {business?.banner_url ? (
-                <img src={business.banner_url} className="w-full h-full object-cover" />
+                <img src={business.banner_url} className="w-full h-full object-cover transition-transform group-hover:scale-105" referrerPolicy="no-referrer" />
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 gap-2">
-                  <ImageIcon size={40} className="opacity-20" />
-                  <p className="text-[10px] uppercase font-bold tracking-widest">Sin Banner Publicitario</p>
+                <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 gap-2 p-10 text-center">
+                  <div className="w-16 h-16 bg-slate-200/50 rounded-full flex items-center justify-center mb-2">
+                    <ImageIcon size={32} className="opacity-20" />
+                  </div>
+                  <p className="text-[10px] uppercase font-bold tracking-[0.2em]">Diseña tu Fachada Digital</p>
+                  <p className="text-[11px] text-slate-400 italic">Sube un banner atractivo para atraer vecinos.</p>
                 </div>
               )}
-              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center backdrop-blur-sm">
+              
+              {/* Overlay: Siempre visible si no hay imagen, visible al hover si ya hay una */}
+              <div className={`absolute inset-0 bg-black/40 transition-all flex items-center justify-center backdrop-blur-[2px] ${
+                business?.banner_url ? 'opacity-0 md:group-hover:opacity-100' : 'opacity-100'
+              }`}>
                 <button 
+                  type="button"
                   onClick={() => bannerInputRef.current?.click()}
-                  className="bg-white px-6 py-3 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-2"
+                  disabled={uploadingBanner}
+                  className="bg-white text-brand-ink px-8 py-3 rounded-full text-[10px] font-bold uppercase tracking-[0.15em] flex items-center gap-3 shadow-2xl hover:scale-105 transition-all active:scale-95 disabled:opacity-50"
                 >
-                  <ImageIcon size={14} /> Subir Banner
+                  {uploadingBanner ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <Upload size={16} />
+                  )}
+                  {business?.banner_url ? 'Cambiar Banner' : 'Subir Primer Banner'}
                 </button>
                 <input type="file" hidden ref={bannerInputRef} onChange={handleBannerUpload} accept="image/*" />
               </div>

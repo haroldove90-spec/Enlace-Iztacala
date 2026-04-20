@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Send, MapPin, Tag, Loader2, Image as ImageIcon, Video, Paperclip } from 'lucide-react';
 import { createPost, createIncident, uploadFile } from '../lib/supabase-hooks';
+import { toast } from 'react-hot-toast';
 
 interface NewItemModalProps {
   isOpen: boolean;
@@ -34,13 +35,22 @@ export default function NewPostModal({ isOpen, onClose, userId, type, userRole }
     try {
       let fileUrl = '';
       if (selectedFile) {
-        fileUrl = await uploadFile('post-assets', selectedFile, userId);
+        const loadingToast = toast.loading('Subiendo multimedia...');
+        try {
+          fileUrl = await uploadFile('post-assets', selectedFile, userId);
+          toast.success('Archivo listo', { id: loadingToast });
+        } catch (uploadErr) {
+          toast.error('Error al subir archivo. Verifica el bucket "post-assets".', { id: loadingToast });
+          throw uploadErr;
+        }
       }
 
       if (type === 'post') {
         await createPost(content, category, userId, fileUrl);
+        toast.success('Publicado con éxito');
       } else {
         await createIncident(title, content, location, userId, fileUrl);
+        toast.success('Incidente reportado');
       }
       
       // Limpiar y cerrar
@@ -51,7 +61,7 @@ export default function NewPostModal({ isOpen, onClose, userId, type, userRole }
       onClose();
     } catch (error) {
       console.error('Error al publicar:', error);
-      alert('Hubo un error al publicar. Verifica que el bucket "post-assets" exista en Supabase.');
+      // El error de subida ya se notificó arriba
     } finally {
       setLoading(false);
     }
