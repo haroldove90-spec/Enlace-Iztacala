@@ -33,7 +33,10 @@ export default function PWAInstallPrompt() {
   }, []);
 
   const handleInstall = async () => {
-    if (!deferredPrompt) return;
+    if (!deferredPrompt) {
+      alert("Para instalar en este dispositivo: \n1. Da clic en el botón Compartir o Ajustes del navegador.\n2. Selecciona 'Agregar a inicio' o 'Instalar App'.");
+      return;
+    }
     
     setIsVisible(false);
     deferredPrompt.prompt();

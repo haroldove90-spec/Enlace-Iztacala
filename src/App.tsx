@@ -332,7 +332,7 @@ export default function App() {
                   onClick={() => { setActiveTab('Mi Perfil'); setIsSidebarOpen(false); }} 
                 />
                 
-                {profile?.role === 'Admin' && (
+                {(profile?.role === 'Admin' || profile?.role === 'Administrador' || profile?.role === 'Gobierno') && (
                   <SidebarItem 
                     icon={<Shield size={18} />} 
                     label="Panel Admin" 
@@ -340,8 +340,8 @@ export default function App() {
                     onClick={() => { setActiveTab('Panel Admin'); setIsSidebarOpen(false); }} 
                   />
                 )}
-
-                {(profile?.role === 'Business' || profile?.role === 'Admin') && (
+                
+                {(profile?.role === 'Business' || profile?.role === 'Negocio' || profile?.role === 'Admin' || profile?.role === 'Administrador') && (
                   <SidebarItem 
                     icon={<Store size={18} />} 
                     label="Panel Negocio" 
@@ -468,6 +468,7 @@ export default function App() {
               <LocalCommerceView 
                 currentUserId={user.id} 
                 onViewBusiness={(id) => { setSelectedProfileId(id); setActiveTab('Perfil Público'); }} 
+                onInscribeBusiness={() => setActiveTab('Mi Perfil')}
               />
             </motion.div>
           ) : activeTab === 'Perfil Público' && selectedProfileId ? (
@@ -487,7 +488,7 @@ export default function App() {
                 }}
               />
             </motion.div>
-          ) : activeTab === 'Panel Admin' && profile?.role === 'Admin' ? (
+          ) : activeTab === 'Panel Admin' && (profile?.role === 'Admin' || profile?.role === 'Administrador' || profile?.role === 'Gobierno') ? (
             <motion.div 
               key="admin"
               initial={{ opacity: 0, y: 20 }}
@@ -496,7 +497,7 @@ export default function App() {
             >
               <AdminDashboard />
             </motion.div>
-          ) : activeTab === 'Panel Negocio' && profile?.role === 'Business' ? (
+          ) : activeTab === 'Panel Negocio' && (profile?.role === 'Business' || profile?.role === 'Negocio' || profile?.role === 'Admin' || profile?.role === 'Administrador') ? (
             <motion.div 
               key="business"
               initial={{ opacity: 0, y: 20 }}

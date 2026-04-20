@@ -13,7 +13,7 @@ interface NewItemModalProps {
 export default function NewPostModal({ isOpen, onClose, userId, type, userRole }: NewItemModalProps & { userRole?: string }) {
   const [content, setContent] = useState('');
   const [title, setTitle] = useState(''); // Solo para incidentes
-  const [category, setCategory] = useState(userRole === 'Business' ? 'Comercio' : 'Social');
+  const [category, setCategory] = useState((userRole === 'Business' || userRole === 'Negocio') ? 'Comercio' : 'Social');
   const [location, setLocation] = useState('');
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);

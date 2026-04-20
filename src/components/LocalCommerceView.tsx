@@ -8,9 +8,10 @@ import PostInteractions from './PostInteractions';
 interface LocalCommerceViewProps {
   currentUserId: string;
   onViewBusiness: (id: string) => void;
+  onInscribeBusiness: () => void;
 }
 
-export default function LocalCommerceView({ currentUserId, onViewBusiness }: LocalCommerceViewProps) {
+export default function LocalCommerceView({ currentUserId, onViewBusiness, onInscribeBusiness }: LocalCommerceViewProps) {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [commercePosts, setCommercePosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -216,7 +217,10 @@ export default function LocalCommerceView({ currentUserId, onViewBusiness }: Loc
             </div>
 
             <div className="mt-8 pt-8 border-t border-slate-50">
-               <button className="w-full py-4 bg-brand-primary/10 text-brand-primary rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-brand-primary hover:text-white transition-all">
+               <button 
+                 onClick={onInscribeBusiness}
+                 className="w-full py-4 bg-brand-primary/10 text-brand-primary rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-brand-primary hover:text-white transition-all"
+               >
                  Inscribir mi Negocio
                </button>
             </div>
