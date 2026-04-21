@@ -8,14 +8,10 @@ export default function HeaderBanner() {
 
   if (loading || banners.length === 0) return null;
 
-  const activeBanner = banners[0]; // Mostramos el más reciente por ahora
+  const activeBanner = banners[0];
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="w-full mb-8"
-    >
+    <div className="w-full mb-8">
       <a 
         href={activeBanner.link_url || '#'} 
         target="_blank" 
@@ -49,10 +45,10 @@ export default function HeaderBanner() {
         </div>
 
         {/* Tag siempre visible */}
-        <div className="absolute top-4 right-4 px-3 py-1 bg-white/80 backdrop-blur-sm text-brand-ink text-[9px] font-black uppercase tracking-[0.2em] rounded-full border border-whiteShadow shadow-sm z-10 flex items-center gap-2">
+        <div className="absolute top-4 right-4 px-3 py-1 bg-white/80 backdrop-blur-sm text-brand-ink text-[9px] font-black uppercase tracking-[0.2em] rounded-full border-whiteShadow shadow-sm z-10 flex items-center gap-2">
           <Megaphone size={12} className="text-brand-primary" /> Espacio Reservado
         </div>
       </a>
-    </motion.div>
+    </div>
   );
 }

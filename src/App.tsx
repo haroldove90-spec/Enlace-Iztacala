@@ -555,7 +555,7 @@ export default function App() {
               <RecentUsersSlider />
               
               <QuickPostForm 
-                onOpenModal={() => setIsPostModalOpen(true)} 
+                onOpenModal={() => { setModalType('post'); setIsModalOpen(true); }} 
                 userProfile={profile || undefined} 
               />
 
